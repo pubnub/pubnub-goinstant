@@ -16,13 +16,13 @@ Read below for a general overview of how GoInstant features translate to the Pub
     </tr>
     <tr>
       <td>
-        <code>
+        <pre>
           &lt;script src=&quot;https://cdn.goinstant.net/v1/platform.min.js&quot;&gt;&lt;/script&gt;
           &lt;script&gt;
           var url = 'https://goinstant.net/ACCOUNT/APP';
           var connect = goinstant.connect(url);
           &lt;/script&gt;
-        </code>
+        </pre>
       </td>
       <td>
         Connecting to GoInstant gives you access to store data for your application.
