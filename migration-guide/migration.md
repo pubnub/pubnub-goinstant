@@ -24,7 +24,7 @@ var connect = goinstant.connect(url);
 
 #### PubNub
 
-Get a new Pubnub instance with publish and subscribe key.
+Get a new Pubnub instance with publish and subscribe key. Check out our [getting started guide](http://www.pubnub.com/docs/javascript/tutorial/quick-start.html).
 
 ```html
 <script src="http://cdn.pubnub.com/pubnub.min.js"></script>
@@ -54,7 +54,9 @@ channel.message({
 
 #### PubNub
 
-The publish() function is used to send a message to all subscribers of a channel. To publish a message you must first specify a valid publish_key at initialization. A successfully published message is replicated across the PubNub Real-Time Network and sent simultaneously to all subscribed clients on a channel.
+The publish() function is used to send a message to all subscribers of a channel. A successfully published message is replicated across the PubNub Real-Time Network and sent simultaneously to all subscribed clients on a channel.
+
+Check out our [data streams tutorial](http://www.pubnub.com/docs/javascript/tutorial/data-push.html).
 
 ```js
 pubnub.publish({
@@ -87,7 +89,7 @@ Simple security rules for controlling application and data access. In this examp
 
 #### PubNub
 
-PubNub Access Manager provides fine grain Publish and Subscribe permissions down to person, device or channel.
+PubNub Access Manager provides fine grain Publish and Subscribe permissions down to person, device or channel. For more on permissions and authentication, check out our [PAM tutorial](http://www.pubnub.com/docs/javascript/tutorial/access-manager.html).
 
 ```js
 
