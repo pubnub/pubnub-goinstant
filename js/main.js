@@ -60,8 +60,9 @@ var load_jslibraries = function(complete) {
 var load_jscode = function(complete) {
     head.load({js_pubnub_goinstant: "js/pubnub-goinstant.js"}, function () {
         App.jslog("Pubnub-GoInstant loaded")
-        
+
         head.load({js_dev: "js/dev.js"}, function () {
+            App.jslog("Dev.js loaded")
             App.log("COMPLETE: Development Code loaded");
             complete();
         });
