@@ -201,13 +201,130 @@ Data encryption via SSL and AES for secure sync
 
 ### Connect
 
-https://developers.goinstant.com/v1/javascript_api/connection/connect.html
+#### GoInstant
+
+Connect to the GoInstant servers. This will trigger any handlers listening to the connect event.
+
+```js
+var url = 'https://goinstant.net/YOURACCOUNT/YOURAPP';
+var connection = new goinstant.Connection(url);
+connection.connect(function(err) {
+  if (err) {
+    console.log('Error connecting to GoInstant:', err);
+    return;
+  }
+  // you're connected!
+});
+```
+
+#### PubNub
+
+PubNub connections are made when the client subscribes to a channel.
+
+```js
+// Initialize with Publish & Subscribe Keys
+var pubnub = PUBNUB.init({
+   publish_key: 'demo',
+   subscribe_key: 'demo'
+});
+
+// Subscribe with callbacks
+pubnub.subscribe({
+  channel : 'my_channel',
+  message : function( message, env, channel ){
+     // RECEIVED A MESSAGE.
+     console.log(message)
+  },
+  connect: function(){console.log("Connected")},
+  disconnect: function(){console.log("Disconnected")},
+  reconnect: function(){console.log("Reconnected")},
+  error: function(){console.log("Network Error")}, 
+
+});
+```
 
 ### Disconnect
 
+#### GoInstant
+
+Disconnects from the GoInstant servers. This will trigger any handlers listening to the disconnect event.
+
+```js
+connection.disconnect(function(err) {
+  if (err) {
+    console.log("Error disconnecting:", err);
+    return;
+  }
+  // you are disconnected!
+});
+```
+
+#### PubNub
+
+When subscribed to a single channel, this function causes the client to issue a leave from the channel and close any open socket to the PubNub Network. 
+
+```
+// Unsubscribe from 'my_channel'
+
+pubnub.unsubscribe({
+  channel : 'my_channel',
+});
+```
+
 ### isGuest
 
-This is something you can do with user state.
+#### GoInstant
+
+Returns true, false, or null based on if the currently logged-in user is a Guest or not. If the connection is not currently established, null is returned, which in a boolean context is "falsy".
+
+```js
+var url = 'https://goinstant.net/YOURACCOUNT/YOURAPP';
+goinstant.connect(url, function(err, conn) {});
+  if (err) {
+    console.log("Error connecting:", err);
+    // Failed to connect to GoInstant
+    // NOTE: conn.isGuest() will return `null` if called here
+    return;
+  }
+
+  if (conn.isGuest()) {
+    showLoginButtons(conn);
+  } else {
+    joinRooms(conn);
+  }
+});
+```
+
+#### PubNub
+
+The state API is used to get or set key/value pairs specific to a subscriber uuid. A client's uuid is set during [init](http://www.pubnub.com/docs/javascript/api/reference.html#init).
+
+State information is supplied as a JSON object of key/value pairs.
+
+```js
+ // Initialize with Custom UUID
+ var pubnub = PUBNUB.init({
+     publish_key: 'demo',
+     subscribe_key: 'demo',
+     uuid: 'my_uuid'
+ });
+
+// Set state to current uuid
+pubnub.state({
+  channel  : "my_channel",
+  state    : { "isGuest": true },
+  callback : function(m){console.log(m)},
+  error    : function(m){console.log(m)}
+);
+
+// Get state by uuid.
+pubnub.state({
+  channel  : "my_channel",
+  uuid     : "my_uuid",
+  callback : function(m){console.log(m)},
+  error    : function(m){console.log(m)}
+);
+```
 
 ### loginURL
 
