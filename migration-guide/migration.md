@@ -27,9 +27,9 @@ Read below for a general overview of how GoInstant features translate to the Pub
     - logoutUrl
     - off
     - on
+    - PubNub
     - room
     - rooms
-    - errors
   - Rooms
     - Channels
     - Connection
@@ -239,7 +239,6 @@ pubnub.subscribe({
   disconnect: function(){console.log("Disconnected")},
   reconnect: function(){console.log("Reconnected")},
   error: function(){console.log("Network Error")}, 
-
 });
 ```
 
@@ -328,31 +327,144 @@ pubnub.state({
 
 ### loginURL
 
-See our section on authentication and PAM.
+#### GoInstant
+
+Returns a URL to the GoInstant Authentication API for the Account & App used to create this connection.
+
+```js
+var href = connection.loginUrl('facebook');
+```
+
+#### PubNub
+
+* Make the Facebook, Twitter, or other OAuth call to identify the user. 
+* Use the information returned as the ```auth_key``` or ```uuid``` during ```PUBNUB.init()```.
+
+```js
+
+// Facebook Login for Web 
+// https://developers.facebook.com/docs/facebook-login/login-flow-for-web/
+
+FB.api('/me', function(data) {
+  
+  pubnub = PUBNUB.init({
+    publish_key: 'demo',
+    subscribe_key: 'demo',
+    uuid: data.name
+  });
+
+  pubnub.subscribe({ ... });
+
+});
+```
 
 ### logoutUrl
 
-PAM timeout. Unsubscribe.
+#### GoInstant
+
+Returns a URL to the GoInstant Authentication API that allows a user to "sign out" of the Account & App used to create this connection.
+
+```js
+window.location = connection.logoutUrl();
+```
+
+#### PubNub
+
+Just like our login example, we use ```FB.logout``` then unsubscribe to the channel.
+
+```js
+FB.logout(function(response) {
+  pubnub.unsubscribe({ ... });
+});
+```
 
 ### off
 
-connect / disconnect / error
+#### GoInstant
+
+Remove a previously established listener for a Connection event.
+
+```js
+connection.off(eventName, callback(errorObject))
+```
+
+#### PubNub
+
+Because PubNub's events are registered as callbacks in the ```PUBNUB.subscirbe()``` function we do not offer a way to unregister events.
 
 ### on
 
-connect / disconnect / error
+Create a listener for a Connection event, which listens for events that are fired locally, and so will never be fired when other users connect/disconnect/error.
+
+```js
+connection.on(eventName, listener(errorObject))
+```
+
+### PubNub 
+
+You can supply callbacks within ```PUBNUB.subscribe()``` for similar events.
+
+```js
+pubnub.subscribe({
+  channel: 'my_channel',
+  message: function( message, env, channel ){
+     // RECEIVED A MESSAGE.
+  },
+  connect: function(){console.log("Connected")},
+  disconnect: function(){console.log("Disconnected")},
+  reconnect: function(){console.log("Reconnected")},
+  error: function(){console.log("Network Error")}, 
+});
+```
 
 ### room
 
-I don't think we have comparable.
+#### GoInstant
+
+Returns a Room object.
+
+```js
+var connection = new goinstant.Connection(url);
+connection.connect(token, function (err) {
+
+  var room = connection.room('YOURROOM');
+  room.join(function(err) {
+    if (err) {
+      console.log("Error joining room:", err);
+      return;
+    }
+
+    console.log("Joined room!");
+  });
+});
+```
+
+#### PubNub
+
+PubNub does not have a concept of rooms, only "channels." You can get information about channel permissions using [audit](http://www.pubnub.com/docs/javascript/api/reference.html#audit) and information about the users in a channel using [here_now](http://www.pubnub.com/docs/javascript/api/reference.html#here_now).
 
 ### rooms
 
-No comparable. "where_now"
+#### GoInstant
 
-### errors
+Returns an array of Rooms to the callback. Includes all rooms that currently belong to the application.
 
-Link to our errors
+```js
+connection.rooms.get(function(err, roomsArray) {
+  if (err) {
+    // A problem occurred during the get.
+    throw err;
+  }
+
+  roomsArray.forEach(function(room) {
+    console.log('Room name:', room.name)
+  });
+});
+```
+
+#### PubNub
+
+PubNub does not supply a method to find all channels within an application. However, you can find all the channels a uuid is connected to with [where_now](http://www.pubnub.com/docs/javascript/api/reference.html#where_now).
 
 ## Rooms
 
