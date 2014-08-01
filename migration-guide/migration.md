@@ -16,13 +16,13 @@ Read below for a general overview of how GoInstant features translate to the Pub
     </tr>
     <tr>
       <td>
-        ```html
+        <pre>
         <script src="https://cdn.goinstant.net/v1/platform.min.js"></script>
         <script>
         var url = 'https://goinstant.net/ACCOUNT/APP';
         var connect = goinstant.connect(url);
         </script>
-        ```
+        </pre>
       </td>
       <td>
         Connecting to GoInstant gives you access to store data for your application.
@@ -30,7 +30,7 @@ Read below for a general overview of how GoInstant features translate to the Pub
     </tr>
     <tr>
       <td>
-        ```html
+        <pre>
         <script src="http://cdn.pubnub.com/pubnub.min.js"></script>
         <script>
         var pubnub = PUBNUB.init({
@@ -38,7 +38,7 @@ Read below for a general overview of how GoInstant features translate to the Pub
             subscribe_key: 'demo'
         });
         </script>
-        ```
+        </pre>
       </td>
       <td>Get a new Pubnub instance with publish and subscribe key.</td>
     </tr>
