@@ -6,6 +6,59 @@ We're sorry to hear about the discontinuation of GoInstant. PubNub offers compar
 
 Read below for a general overview of how GoInstant features translate to the PubNub network. The examples below come right from [GoInstant's Getting Started Guide](https://goinstant.com/getting-started) and have been translated to the PubNub SDK.
 
+## Table Of Contents
+
+---
+
+<!-- MarkdownTOC depth=4 -->
+
+- Initialization
+  - GoInstant
+  - PubNub
+    - Pub/Sub
+      - GoInstant
+      - PubNub
+    - Security
+      - GoInstant
+      - PubNub
+    - Storage and Sync
+      - GoInstant
+      - PubNub
+- Direct API Migration
+  - Connection
+    - Connect
+    - Disconnect
+    - isGuest
+    - loginURL
+    - logoutUrl
+    - off
+    - on
+    - room
+    - rooms
+    - errors
+  - Rooms
+    - Channels
+    - Connection
+    - Equals
+    - Join
+    - Joined
+    - Key
+    - Leave
+    - off
+    - on
+    - ot
+    - self
+    - user
+    - users
+    - events
+    - Comparison
+    - Identifying users
+    - Joining Multiple Rooms
+    - Promises
+
+<!-- /MarkdownTOC -->
+
+
 ---
 
 ### Initialization
