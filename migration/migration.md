@@ -1,8 +1,10 @@
 # GoInstant -> PubNub Code Migration
 
-## Getting Started
+## Overview
 
-This is a direct translation of [GoInstant's Getting Started Guide](https://goinstant.com/getting-started) to the PubNub SDK.
+We're sorry to hear about the discontinuation of GoInstant. PubNub offers comparative features to GoInstant and we'd love to have you migrate to our network. 
+
+Read below for a general overview of how GoInstant features translate to the PubNub network.  The examples below come right from [GoInstant's Getting Started Guide](https://goinstant.com/getting-started) and have been translated to the PubNub SDK.
 
 ### Initialization
 
