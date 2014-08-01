@@ -2,11 +2,13 @@
 
 ## Overview
 
-We're sorry to hear about the discontinuation of GoInstant. PubNub offers comparative features to GoInstant and we'd love to have you migrate to our network. 
+We're sorry to hear about the discontinuation of GoInstant. PubNub offers comparative features to GoInstant and we'd love to have you migrate to our network.
 
-Read below for a general overview of how GoInstant features translate to the PubNub network.  The examples below come right from [GoInstant's Getting Started Guide](https://goinstant.com/getting-started) and have been translated to the PubNub SDK.
+Read below for a general overview of how GoInstant features translate to the PubNub network. The examples below come right from [GoInstant's Getting Started Guide](https://goinstant.com/getting-started) and have been translated to the PubNub SDK.
 
 ### Initialization
+
+Connecting to GoInstant gives you access to store data for your application.
 
 #### GoInstant
 
@@ -17,7 +19,10 @@ var url = 'https://goinstant.net/ACCOUNT/APP';
 var connect = goinstant.connect(url);
 </script>
 ```
+
 #### PubNub
+
+Get a new Pubnub instance with publish and subscribe key.
 
 ```html
 <script src="http://cdn.pubnub.com/pubnub.min.js"></script>
@@ -31,6 +36,8 @@ var pubnub = PUBNUB.init({
 
 ### Pub/Sub
 
+When you don't need to store data, but need to stream super quick messages between users or devices, use Channels. This is available with the Room#channel interface.
+
 #### GoInstant
 
 ```js
@@ -42,6 +49,8 @@ channel.message({
 ```
 
 #### PubNub
+
+The publish() function is used to send a message to all subscribers of a channel. To publish a message you must first specify a valid publish_key at initialization. A successfully published message is replicated across the PubNub Real-Time Network and sent simultaneously to all subscribed clients on a channel.
 
 ```js
 pubnub.publish({
@@ -57,7 +66,7 @@ pubnub.publish({
 
 #### GoInstant
 
-In this example all users can read the data inside the person key but only admin users can write.
+Simple security rules for controlling application and data access. In this example all users can read the data inside the person key but only admin users can write.
 
 ```js
 {
@@ -72,19 +81,20 @@ In this example all users can read the data inside the person key but only admin
 
 #### PubNub
 
-Grant all users on 'privateChat' read access.
+PubNub Access Manager provides fine grain Publish and Subscribe permissions down to person, device or channel.
 
 ```js
+
+// Grant all users on 'privateChat' read access.
+
 pubnub.grant({
     channel: 'privateChat',
     read: true,
     ttl: 60
 });
-```
 
-Grant any user with ```auth_key``` read and write access.
+// Grant any user with ```auth_key``` read and write access.
 
-```
 pubnub.grant({
     channel: 'privateChat',
     auth_key: 'abxyz12-auth-key-987tuv',
