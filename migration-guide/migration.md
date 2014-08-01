@@ -40,8 +40,6 @@ var pubnub = PUBNUB.init({
 
 ### Pub/Sub
 
-![](http://www.pubnub.com/static/images/old/pubnub-galaxy.gif)
-
 #### GoInstant
 
 When you don't need to store data, but need to stream super quick messages between users or devices, use Channels. This is available with the Room#channel interface.
@@ -55,6 +53,8 @@ channel.message({
 ```
 
 #### PubNub
+
+![](http://www.pubnub.com/static/images/old/pubnub-galaxy.gif)
 
 The publish() function is used to send a message to all subscribers of a channel. A successfully published message is replicated across the PubNub Real-Time Network and sent simultaneously to all subscribed clients on a channel.
 
@@ -74,8 +74,6 @@ pubnub.publish({
 
 ### Security
 
-![](http://www.pubnub.com/static/images/illustrations/security-small.png)
-
 #### GoInstant
 
 Simple security rules for controlling application and data access. In this example all users can read the data inside the person key but only admin users can write.
@@ -92,6 +90,8 @@ Simple security rules for controlling application and data access. In this examp
 ```
 
 #### PubNub
+
+![](http://www.pubnub.com/static/images/illustrations/security-small.png)
 
 PubNub Access Manager provides fine grain Publish and Subscribe permissions down to person, device or channel. For more on permissions and authentication, check out our [PAM tutorial](http://www.pubnub.com/docs/javascript/tutorial/access-manager.html).
 
@@ -119,8 +119,6 @@ pubnub.grant({
 ---
 
 ### Storage and Sync
-
-![](http://www.pubnub.com/static/images/how-it-works/DataSyncDataObjectAllBlue.png)
 
 #### GoInstant
 
