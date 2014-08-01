@@ -3,12 +3,14 @@
 <head lang="en">
     <meta charset="UTF-8">
     <title>PubNub GoInstant</title>
-    <script src="https://cdn.goinstant.net/v1/platform.min.js"></script>
+
+    <script src="//cdnjs.cloudflare.com/ajax/libs/headjs/1.0.3/head.load.min.js"></script>
     <script>
-        var url = 'https://goinstant.net/ACCOUNT/APP';
-        var connect = goinstant.connect(url);
+        // Create a namespace for all the objects
+        window.App = {};
+        var App = window.App;
     </script>
-    <script src="pubnub-goinstant.js"></script>
+    <script src="js/main.js"></script>
 </head>
 <body>
     <h1>PubNub GoInstant Wrapper</h1>
