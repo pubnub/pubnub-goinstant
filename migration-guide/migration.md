@@ -10,20 +10,13 @@ Read below for a general overview of how GoInstant features translate to the Pub
 
 ---
 
-<!-- MarkdownTOC depth=4 -->
+<!-- MarkdownTOC depth=3 -->
 
-- Initialization
-  - GoInstant
-  - PubNub
-    - Pub/Sub
-      - GoInstant
-      - PubNub
-    - Security
-      - GoInstant
-      - PubNub
-    - Storage and Sync
-      - GoInstant
-      - PubNub
+- Getting Started
+  - Initialization
+  - Pub/Sub
+  - Security
+  - Storage and Sync
 - Direct API Migration
   - Connection
     - Connect
@@ -60,6 +53,8 @@ Read below for a general overview of how GoInstant features translate to the Pub
 
 
 ---
+
+## Getting Started
 
 ### Initialization
 
