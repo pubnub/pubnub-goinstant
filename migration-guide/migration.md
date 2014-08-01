@@ -8,44 +8,31 @@ Read below for a general overview of how GoInstant features translate to the Pub
 
 ### Initialization
 
-<table>
-  <tbody>
-    <tr>
-      <th>GoInstant</th>
-      <th>PubNub</th>
-    </tr>
-    <tr>
-      <td>
-        <div class="highlight highlight-html">
-          <pre>
-&lt;script src=&quot;https://cdn.goinstant.net/v1/platform.min.js&quot;&gt;&lt;/script&gt;
-&lt;script&gt;
+#### GoInstant
+
+Connecting to GoInstant gives you access to store data for your application.
+
+```html
+<script src="https://cdn.goinstant.net/v1/platform.min.js"></script>
+<script>
 var url = 'https://goinstant.net/ACCOUNT/APP';
 var connect = goinstant.connect(url);
-&lt;/script&gt;
-          </pre>
-        </div>
-      </td>
-      <td>
-        Connecting to GoInstant gives you access to store data for your application.
-      </td>
-    </tr>
-    <tr>
-      <td>
-        <code>
-          <script src="http://cdn.pubnub.com/pubnub.min.js"></script>
-          <script>
-          var pubnub = PUBNUB.init({
-              publish_key: 'demo',
-              subscribe_key: 'demo'
-          });
-          </script>
-        </code>
-      </td>
-      <td>Get a new Pubnub instance with publish and subscribe key.</td>
-    </tr>
-  </tbody>
-</table>
+</script>
+```
+
+#### PubNub
+
+Get a new Pubnub instance with publish and subscribe key.
+
+```html
+<script src="http://cdn.pubnub.com/pubnub.min.js"></script>
+<script>
+var pubnub = PUBNUB.init({
+    publish_key: 'demo',
+    subscribe_key: 'demo'
+});
+</script>
+```
 
 ### Pub/Sub
 
