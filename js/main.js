@@ -9,22 +9,27 @@ App.goinstantSettings = {
 };
 
 App.log = function(text, prefix){
-    if (prefix !== "") {
+    if (typeof prefix !== 'undefined' && prefix !== "") {
         console.log("\t" + prefix + ": " + text);
     }
     else {
         console.log(text);
     }
-}
+};
+App.jslog = function(text) {
+    App.log(text, "JS");
+};
+
+App.log("LOAD: JS Libraries")
 
 head.load({js_goinstant: "//cdn.goinstant.net/v1/platform.min.js"}, function () {
-    console.log("\tGoInstant v1 loaded");
+    App.jslog("GoInstant v1 loaded");
 
     head.load({js_pubnub: "//rawgit.com/pubnub/javascript/feature-pt74838232-2/web/pubnub.min.js"}, function(){
-       console.log("Pubnub 3.6.7 loaded")
+       App.jslog("Pubnub 3.6.7 loaded")
 
         head.load({js_pubnub_goinstant: "js/pubnub-goinstant.js"}, function () {
-            console.log("Pubnub-GoInstant loaded")
+            App.jslog("Pubnub-GoInstant loaded")
         });
     });
 });
@@ -32,11 +37,11 @@ head.load({js_goinstant: "//cdn.goinstant.net/v1/platform.min.js"}, function () 
 head.ready("js_pubnub_goinstant", function(){
     console.log("COMPLETE: PRE-REQUISITE LIBRARIES");
     head.load({js_dev: "js/dev.js"}, function () {
-        console.log("Development Code loaded")
+        App.log("COMPLETE: Development Code loaded")
     });
 
     head.ready("js_dev", function(){
-        console.log("(ready)");
+        App.log("(ready)");
     })
 });
 
