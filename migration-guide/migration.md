@@ -1,12 +1,13 @@
-# GoInstant to PubNub Code Migration
+GoInstant to PubNub Code Migration
+-----------
 
-## Overview
+# Overview
 
 We're sorry to hear about the discontinuation of GoInstant. PubNub offers comparative features to GoInstant and we'd love to have you migrate to our network.
 
 Read below for a general overview of how GoInstant features translate to the PubNub network. The examples below come right from [GoInstant's Getting Started Guide](https://goinstant.com/getting-started) and have been translated to the PubNub SDK.
 
-## Table Of Contents
+# Table Of Contents
 
 ---
 
@@ -17,7 +18,7 @@ Read below for a general overview of how GoInstant features translate to the Pub
   - Pub/Sub
   - Security
   - Storage and Sync
-- Direct API Migration
+- API Reference for Migration
   - Connection
     - Connect
     - Disconnect
@@ -54,9 +55,9 @@ Read below for a general overview of how GoInstant features translate to the Pub
 
 ---
 
-## Getting Started
+# Getting Started
 
-### Initialization
+## Initialization
 
 #### GoInstant
 
@@ -86,7 +87,7 @@ var pubnub = PUBNUB.init({
 
 ---
 
-### Pub/Sub
+## Pub/Sub
 
 ![](http://www.pubnub.com/static/images/old/pubnub-galaxy.gif)
 
@@ -120,7 +121,7 @@ pubnub.publish({
 
 ---
 
-### Security
+## Security
 
 ![](http://www.pubnub.com/static/images/illustrations/security-small.png)
 
@@ -166,7 +167,7 @@ pubnub.grant({
 
 ---
 
-### Storage and Sync
+## Storage and Sync
 
 #### GoInstant
 
@@ -194,7 +195,7 @@ Data encryption via SSL and AES for secure sync
 
 ---
 
-# Direct API Migration
+# API Reference for Migration
 
 ## Connection
 
