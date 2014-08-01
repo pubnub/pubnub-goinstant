@@ -1,11 +1,13 @@
 App.pubnubSettings = {
     publish: "pub-c-b79d8c74-314a-4312-8852-a61ca49a5fd2",
     subscribe: "sub-c-4745b1e4-19ba-11e4-bbbf-02ee2ddab7fe",
-    secret: "sec-c-OTY5NGI0ODgtMGRkNy00MDkyLWIxODQtN2NmNjhjNzQ4NmEz"
+    secret: "sec-c-OTY5NGI0ODgtMGRkNy00MDkyLWIxODQtN2NmNjhjNzQ4NmEz",
+    url: "https://pubnub/pub-c-b79d8c74-314a-4312-8852-a61ca49a5fd2/sub-c-4745b1e4-19ba-11e4-bbbf-02ee2ddab7fe/sec-c-OTY5NGI0ODgtMGRkNy00MDkyLWIxODQtN2NmNjhjNzQ4NmEz"
 };
 
 App.goinstantSettings = {
     url: "https://goinstant.net/Testjasldkfjklasd/Jasdeep"
+
 };
 
 App.log = function(text, prefix){
@@ -41,7 +43,7 @@ var load_jslibraries = function(complete) {
     head.load({js_goinstant: "//cdn.goinstant.net/v1/platform.min.js"}, function () {
         App.jslog("GoInstant v1 loaded");
 
-        head.load({js_pubnub: "//rawgit.com/pubnub/javascript/feature-pt74838232-2/web/pubnub.min.js"}, function(){
+        head.load({js_pubnub: "//rawgit.com/pubnub/javascript/feature-pt74838232/web/pubnub.min.js"}, function(){
             App.jslog("Pubnub 3.6.7 loaded")
 
             head.load({js_jquery: "//code.jquery.com/jquery-2.1.1.min.js"}, function(){
@@ -53,6 +55,10 @@ var load_jslibraries = function(complete) {
                 });
             });
 
+            head.load({js_jquery: "//cdnjs.cloudflare.com/ajax/libs/lodash.js/2.4.1/lodash.min.js"}, function(){
+                App.jslog("Lodash 2.4.1 loaded");
+            });
+
         });
     });
 };
@@ -60,12 +66,7 @@ var load_jslibraries = function(complete) {
 var load_jscode = function(complete) {
     head.load({js_pubnub_goinstant: "js/pubnub-goinstant.js"}, function () {
         App.jslog("Pubnub-GoInstant loaded")
-
-        head.load({js_dev: "js/dev.js"}, function () {
-            App.jslog("Dev.js loaded")
-            App.log("COMPLETE: Development Code loaded");
-            complete();
-        });
+        complete();
     });
 };
 
@@ -75,6 +76,8 @@ load_css(function(){
        App.log("COMPLETE: PRE-REQUISITE LIBRARIES");
        load_jscode(function(){
            App.log("(ready)");
+           head.load([{js_dev1: "js/dev_gi.js"}, {js_dev2: "js/dev_pn.js"}], function () {
+           });
        });
    });
 });
