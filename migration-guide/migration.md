@@ -17,11 +17,11 @@ Read below for a general overview of how GoInstant features translate to the Pub
     <tr>
       <td>
         <code>
-        <script src="https://cdn.goinstant.net/v1/platform.min.js"></script>
-        <script>
-        var url = 'https://goinstant.net/ACCOUNT/APP';
-        var connect = goinstant.connect(url);
-        </script>
+          &lt;script src=&quot;https://cdn.goinstant.net/v1/platform.min.js&quot;&gt;&lt;/script&gt;
+          &lt;script&gt;
+          var url = 'https://goinstant.net/ACCOUNT/APP';
+          var connect = goinstant.connect(url);
+          &lt;/script&gt;
         </code>
       </td>
       <td>
@@ -31,13 +31,13 @@ Read below for a general overview of how GoInstant features translate to the Pub
     <tr>
       <td>
         <code>
-        <script src="http://cdn.pubnub.com/pubnub.min.js"></script>
-        <script>
-        var pubnub = PUBNUB.init({
-            publish_key: 'demo',
-            subscribe_key: 'demo'
-        });
-        </script>
+          <script src="http://cdn.pubnub.com/pubnub.min.js"></script>
+          <script>
+          var pubnub = PUBNUB.init({
+              publish_key: 'demo',
+              subscribe_key: 'demo'
+          });
+          </script>
         </code>
       </td>
       <td>Get a new Pubnub instance with publish and subscribe key.</td>
