@@ -1,4 +1,4 @@
-# GoInstant -> PubNub Code Migration
+# GoInstant to PubNub Code Migration
 
 ## Overview
 
@@ -8,31 +8,42 @@ Read below for a general overview of how GoInstant features translate to the Pub
 
 ### Initialization
 
-#### GoInstant
-
-Connecting to GoInstant gives you access to store data for your application.
-
-```html
-<script src="https://cdn.goinstant.net/v1/platform.min.js"></script>
-<script>
-var url = 'https://goinstant.net/ACCOUNT/APP';
-var connect = goinstant.connect(url);
-</script>
-```
-
-#### PubNub
-
-Get a new Pubnub instance with publish and subscribe key.
-
-```html
-<script src="http://cdn.pubnub.com/pubnub.min.js"></script>
-<script>
-var pubnub = PUBNUB.init({
-    publish_key: 'demo',
-    subscribe_key: 'demo'
-});
-</script>
-```
+<table>
+  <tbody>
+    <tr>
+      <th>GoInstant</th>
+      <th>PubNub</th>
+    </tr>
+    <tr>
+      <td>
+        ```html
+        <script src="https://cdn.goinstant.net/v1/platform.min.js"></script>
+        <script>
+        var url = 'https://goinstant.net/ACCOUNT/APP';
+        var connect = goinstant.connect(url);
+        </script>
+        ```
+      </td>
+      <td>
+        Connecting to GoInstant gives you access to store data for your application.
+      </td>
+    </tr>
+    <tr>
+      <td>
+        ```html
+        <script src="http://cdn.pubnub.com/pubnub.min.js"></script>
+        <script>
+        var pubnub = PUBNUB.init({
+            publish_key: 'demo',
+            subscribe_key: 'demo'
+        });
+        </script>
+        ```
+      </td>
+      <td>Get a new Pubnub instance with publish and subscribe key.</td>
+    </tr>
+  </tbody>
+</table>
 
 ### Pub/Sub
 
