@@ -40,6 +40,8 @@ var pubnub = PUBNUB.init({
 
 ### Pub/Sub
 
+![](http://www.pubnub.com/static/images/old/pubnub-galaxy.gif)
+
 #### GoInstant
 
 When you don't need to store data, but need to stream super quick messages between users or devices, use Channels. This is available with the Room#channel interface.
@@ -71,6 +73,8 @@ pubnub.publish({
 ---
 
 ### Security
+
+![](http://www.pubnub.com/static/images/illustrations/security-small.png)
 
 #### GoInstant
 
@@ -115,6 +119,8 @@ pubnub.grant({
 ---
 
 ### Storage and Sync
+
+![](http://www.pubnub.com/static/images/how-it-works/DataSyncDataObjectAllBlue.png)
 
 #### GoInstant
 
