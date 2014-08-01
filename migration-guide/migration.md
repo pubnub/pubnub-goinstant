@@ -8,9 +8,9 @@ Read below for a general overview of how GoInstant features translate to the Pub
 
 ### Initialization
 
-Connecting to GoInstant gives you access to store data for your application.
-
 #### GoInstant
+
+Connecting to GoInstant gives you access to store data for your application.
 
 ```html
 <script src="https://cdn.goinstant.net/v1/platform.min.js"></script>
@@ -36,9 +36,9 @@ var pubnub = PUBNUB.init({
 
 ### Pub/Sub
 
-When you don't need to store data, but need to stream super quick messages between users or devices, use Channels. This is available with the Room#channel interface.
-
 #### GoInstant
+
+When you don't need to store data, but need to stream super quick messages between users or devices, use Channels. This is available with the Room#channel interface.
 
 ```js
 var myChannel = room.channel('notifications');
