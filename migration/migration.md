@@ -1,5 +1,127 @@
 # GoInstant -> PubNub Code Migration
 
+## Getting Started
+
+This is a direct translation of [GoInstant's Getting Started Guide](https://goinstant.com/getting-started) to the PubNub SDK.
+
+### Initialization
+
+#### GoInstant
+
+```html
+<script src="https://cdn.goinstant.net/v1/platform.min.js"></script>
+<script>
+var url = 'https://goinstant.net/ACCOUNT/APP';
+var connect = goinstant.connect(url);
+</script>
+```
+#### PubNub
+
+```html
+<script src="http://cdn.pubnub.com/pubnub.min.js"></script>
+<script>
+var pubnub = PUBNUB.init({
+    publish_key: 'demo',
+    subscribe_key: 'demo'
+});
+</script>
+```
+
+### Pub/Sub
+
+#### GoInstant
+
+```js
+var myChannel = room.channel('notifications');
+channel.message({
+    time: Date.now(), 
+    message: 'A new user has connected'
+});
+```
+
+#### PubNub
+
+```js
+pubnub.publish({
+    channel: 'notifications',
+    message: {
+        time: Date.now(), 
+        message: 'A new user has connected'
+    }
+});
+```
+
+### Security
+
+#### GoInstant
+
+In this example all users can read the data inside the person key but only admin users can write.
+
+```js
+{
+  "$room": {
+    "person": {
+      "#read": {"users": ["*"]},
+      "#write": {"users": [], "groups": ["admin"]}
+    }
+  }
+}
+```
+
+#### PubNub
+
+Grant all users on 'privateChat' read access.
+
+```js
+pubnub.grant({
+    channel: 'privateChat',
+    read: true,
+    ttl: 60
+});
+```
+
+Grant any user with ```auth_key``` read and write access.
+
+```
+pubnub.grant({
+    channel: 'privateChat',
+    auth_key: 'abxyz12-auth-key-987tuv',
+    read: true,
+    write: true,
+    ttl: 60
+});
+```
+
+### Storage and Sync
+
+#### GoInstant
+
+```js
+person.get(function(err, value) {
+  // value contains {name: 'John Smith', title: 'CEO'}
+});
+
+person.on('set', function(value) {
+  // value contains the updated contents of our key
+});
+```
+
+#### PubNub
+
+PubNub offers a similar API called Datasync in private beta. We're giving preferred access to applications migrating from GoInstant. [Apply Here](http://www.pubnub.com/how-it-works/data-sync/#access).
+
+* Automatically sync application data in realtime across a range of devices
+Store and share objects throughout your application's lifecycle
+Features
+* Support for JavaScript, iOS, Android, Python, Java, and many other environments
+* Global synchronization with under 1/4 second latency
+* Read/Write access control permissions on objects across users and devices
+Data encryption via SSL and AES for secure sync
+
+---------
+
+# Direct API Migration
+
 ## Connection
 
 ### Connect
