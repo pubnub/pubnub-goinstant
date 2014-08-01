@@ -6,6 +6,8 @@ We're sorry to hear about the discontinuation of GoInstant. PubNub offers compar
 
 Read below for a general overview of how GoInstant features translate to the PubNub network. The examples below come right from [GoInstant's Getting Started Guide](https://goinstant.com/getting-started) and have been translated to the PubNub SDK.
 
+---
+
 ### Initialization
 
 #### GoInstant
@@ -34,6 +36,8 @@ var pubnub = PUBNUB.init({
 </script>
 ```
 
+---
+
 ### Pub/Sub
 
 #### GoInstant
@@ -61,6 +65,8 @@ pubnub.publish({
     }
 });
 ```
+
+---
 
 ### Security
 
@@ -104,6 +110,8 @@ pubnub.grant({
 });
 ```
 
+---
+
 ### Storage and Sync
 
 #### GoInstant
@@ -130,7 +138,7 @@ Features
 * Read/Write access control permissions on objects across users and devices
 Data encryption via SSL and AES for secure sync
 
----------
+---
 
 # Direct API Migration
 
