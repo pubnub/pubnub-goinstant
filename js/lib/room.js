@@ -1,4 +1,4 @@
-goinstant2.Room = function Room(context, name, user){
+goinstant2.Room = function Room(context, name, user){ 
 
     var _context = context;
     _context.room = this;

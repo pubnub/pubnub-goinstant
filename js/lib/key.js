@@ -26,7 +26,7 @@ goinstant2.Key = function Key(context, roomName, keyName, pubnubConnection){
             return new goinstant2.Key(_roomID, _keyID + "/" + keyName, _pubnub);
         },
         parent: function(){
-            console.log("TODO: return parent key")
+            console.log("TODO: return parent key");
         }
-    }
+    };
 };
