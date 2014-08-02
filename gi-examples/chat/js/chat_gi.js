@@ -7,7 +7,7 @@ $(function() {
   var _ = window._;
   var goinstant = window.goinstant;
 
-  var url = 'CONNECT_URL_HERE';
+  var url = 'https://goinstant.net/Testjasldkfjklasd/Jasdeep';
 
   var conn;
   var room;
