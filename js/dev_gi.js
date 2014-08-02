@@ -1,3 +1,6 @@
+App.goinstantSettings = {
+    url: "https://goinstant.net/Testjasldkfjklasd/Jasdeep"
+};
 
 var gi = new goinstant.Connection(App.goinstantSettings.url);
 

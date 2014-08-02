@@ -1,7 +1,7 @@
 
-var pubnub_goinstant_room = (function() {
+function PNGI_Room = function(){
 
-})();
+}
 
 var pubnub_goinstant = (function () {
     var instance;
