@@ -45,7 +45,9 @@ var PNGI_Room = function PNGI_Connection(name, pubnub_connection, user){
                 }
             });
         },
-        leave: function()
+        leave: function() {
+
+        },
         on: function(event, fn){
             if (event === 'join') {
                 _onEvents.join = fn;
