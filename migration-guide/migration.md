@@ -9,8 +9,6 @@ Read below for a general overview of how GoInstant features translate to the Pub
 
 # Table Of Contents
 
----
-
 <!-- MarkdownTOC depth=3 -->
 
 - Getting Started
@@ -30,6 +28,7 @@ Read below for a general overview of how GoInstant features translate to the Pub
     - PubNub
     - room
     - rooms
+    - Events
   - Rooms
     - Channels
     - Connection
@@ -40,11 +39,13 @@ Read below for a general overview of how GoInstant features translate to the Pub
     - Leave
     - off
     - on
+    - PubNub
     - ot
     - self
     - user
     - users
     - events
+  - Other notes
     - Comparison
     - Identifying users
     - Joining Multiple Rooms
@@ -466,67 +467,431 @@ connection.rooms.get(function(err, roomsArray) {
 
 PubNub does not supply a method to find all channels within an application. However, you can find all the channels a uuid is connected to with [where_now](http://www.pubnub.com/docs/javascript/api/reference.html#where_now).
 
+### Events
+
+The Connection object can be observed for protocol-level events using Connection#on. These are the events that can be monitored:
+
+* connect
+* disconnect
+* error
+
+```js
+connection.on('connect', function(connection) {
+  console.log("Connected!");
+});
+```
+
+#### PubNub
+
+You can supply callbacks within ```PUBNUB.subscribe()``` for similar events.
+
+```js
+pubnub.subscribe({
+  channel: 'my_channel',
+  message: function( message, env, channel ){
+     // RECEIVED A MESSAGE.
+  },
+  connect: function(){console.log("Connected")},
+  disconnect: function(){console.log("Disconnected")},
+  reconnect: function(){console.log("Reconnected")},
+  error: function(){console.log("Network Error")}, 
+});
+```
+
 ## Rooms
 
 ### Channels
 
-Channels exist within a room. We only have concept of channels without rooms.
+#### GoInstant
+
+Create a reference to a Channel within the room. Channels are useful for sending and receiving messages within a room. Please see the Channel page for more details on how to use them.
+
+```js
+var channel = room.channel('/a/channel');
+
+channel.message({ time: Date.now(), msg: 'hi'}, function(err) {
+  if (err) {
+    // Messaging the channel was not successful!
+  }
+
+  // The message was sent!
+});
+
+channel.on('message', function(msg) {
+  // received a msg from another user
+});
+```
+
+#### PubNub
+
+Channels are created on the fly and can scale to millions of users making them very easy to use. When you create a PubNub powered application, clients and severs will communicate over a channel.
+
+There is no concept of "rooms." All configuration takes place on a channel level.
+
+```js
+// Initialize with Publish & Subscribe Keys
+var pubnub = PUBNUB.init({
+  publish_key: 'demo',
+  subscribe_key: 'demo'
+});
+
+// Subscribe to a channel
+pubnub.subscribe({
+  channel: 'my_channel',
+  message: function(m){console.log(m)}
+});
+
+// Publish a welcome message
+pubnub.publish({
+  channel: 'my_channel',        
+  message: 'Hello from the PubNub Javascript SDK'
+});
+```
 
 ### Connection
 
-We don't have this.
+#### GoInstant
+
+Returns a reference to the Connection object on which the Room was instantiated.
+
+```js
+var room = connection.room('myroom');
+
+console.log(room.connection() === connection); // true
+
+// Make another room
+var otherRoom = room.connection().room('otherRoom');
+```
+
+#### PubNub
+
+N/A
 
 ### Equals 
+
+#### GoInstant
+
+Tests for equality with another Room instance. Two Rooms are considered equal if they refer to the same logical room in GoInstant (i.e. they have the same name).
+
+```js
+var room = connection.room('YOURROOM');
+var anotherInstance = connection.room('YOURROOM');
+var differentRoom = connection.room('DIFFERENTROOM');
+
+console.log(room.equals(room)); // true
+console.log(room.equals(anotherInstance)); // true
+console.log(room.equals(differentRoom)); // false
+```
+
+#### PubNub
 
 N/A
 
 ### Join
 
-Subscribe
+#### GoInstant
+
+Join the room. You must join a room before you can access its keys or users.
+
+```js
+var room = connection.room('YOURROOM');
+room.join(function(err, yourRoom, userData) {
+  if (err) {
+    console.log("Error joining room:", err);
+    // Failed to join room; clean up or retry.
+    return;
+  }
+
+  // Joined the room. Start getting and manipulating keys.
+  console.log("Joined room!");
+});
+```
+
+#### PubNub
+
+PubNub has no concept of "rooms," only "channels." Connect to a channel with ```PUBNUB.subscribe()```. 
+
+This function causes the client to create an open TCP socket to the PubNub Real-Time Network and begin listening for messages on a specified channel. To subscribe to a channel the client must send the appropriate subscribe_key at initialization.
+
+```js
+pubnub.subscribe({
+  channel: 'my_channel_1,my_channel_2',
+  message: function(message){console.log(message) }
+});
+```
 
 ### Joined
 
-Boolean if connected. We may have.
+#### GoInstant
+
+Returns a boolean indicating whether or not the room has been joined by the user.
+
+```js
+var room = connection.room('YOURROOM');
+
+console.log(room.joined()); // false
+
+room.join(function(err) {
+  if (err) {
+    return;
+  }
+
+  console.log(room.joined()); // true
+
+  room.leave(function(err) {
+    if (err) {
+      return;
+    }
+
+    console.log(room.joined()); // false
+  });
+});
+```
+
+#### PubNub
+
+You can manage the state of a connection using the callbacks in ```PUBNUB.subscribe()```.
+
+```js
+pubnub.subscribe({
+  channel: 'my_channel',
+  message: function( message, env, channel ){
+     // RECEIVED A MESSAGE.
+  },
+  connect: function(){console.log("Connected")},
+  disconnect: function(){console.log("Disconnected")},
+  reconnect: function(){console.log("Reconnected")},
+  error: function(){console.log("Network Error")}, 
+});
+```
+
+You also can get a list of the channels a uuid is subscribed to with ```PUBNUB.where_now()```.
+
+```js
+// Get List of channels for uuid.
+
+pubnub.where_now({
+  uuid     : 'my_uuid',
+  callback : function(m){console.log(m)},
+  error : function(m){console.log(m)}
+});
+```
 
 ### Key
 
-Datasync
+#### GoInstant
+
+Create a reference to a Key within the room.
+
+```js
+var key = room.key('/vegetables/carrot');
+key.get(function(err, value, context) {
+  // display key value;
+});
+```
+
+#### PubNub
+
+PubNub offers a similar API called Datasync in private beta. We're giving preferred access to applications migrating from GoInstant. [Apply Here](http://www.pubnub.com/how-it-works/data-sync/#access).
+
+* Automatically sync application data in realtime across a range of devices
+Store and share objects throughout your application's lifecycle
+Features
+* Support for JavaScript, iOS, Android, Python, Java, and many other environments
+* Global synchronization with under 1/4 second latency
+* Read/Write access control permissions on objects across users and devices
+Data encryption via SSL and AES for secure sync
 
 ### Leave
 
-Unsubscribe
+When subscribed to a single channel, unsubscribe causes the client to issue a leave from the channel and close any open socket to the PubNub Network. 
+
+```
+// Unsubscribe from 'my_channel'
+
+pubnub.unsubscribe({
+  channel : 'my_channel',
+});
+```
 
 ### off
 
-Link  to our events
+#### GoInstant
+
+Remove a previously established listener for a Connection event.
+
+```js
+connection.off(eventName, callback(errorObject))
+```
+
+#### PubNub
+
+Because PubNub's events are registered as callbacks in the ```PUBNUB.subscirbe()``` function we do not offer a way to unregister events.
 
 ### on
 
-Link  to our events
+Create a listener for a Connection event, which listens for events that are fired locally, and so will never be fired when other users connect/disconnect/error.
+
+```js
+connection.on(eventName, listener(errorObject))
+```
+
+### PubNub 
+
+You can supply callbacks within ```PUBNUB.subscribe()``` for similar events.
+
+```js
+pubnub.subscribe({
+  channel: 'my_channel',
+  message: function( message, env, channel ){
+     // RECEIVED A MESSAGE.
+  },
+  connect: function(){console.log("Connected")},
+  disconnect: function(){console.log("Disconnected")},
+  reconnect: function(){console.log("Reconnected")},
+  error: function(){console.log("Network Error")}, 
+});
+```
 
 ### ot
 
-See Datasync
+#### GoInstant
+
+Create a reference to an OT Key within the room.
+
+```js
+var ot = room.ot('/foo');
+```
+
+#### PubNub
+
+PubNub offers a similar API called Datasync in private beta. We're giving preferred access to applications migrating from GoInstant. [Apply Here](http://www.pubnub.com/how-it-works/data-sync/#access).
+
+* Automatically sync application data in realtime across a range of devices
+Store and share objects throughout your application's lifecycle
+Features
+* Support for JavaScript, iOS, Android, Python, Java, and many other environments
+* Global synchronization with under 1/4 second latency
+* Read/Write access control permissions on objects across users and devices
+Data encryption via SSL and AES for secure sync
 
 ### self
 
-state
+#### GoInstant
+
+Returns the Key reference to the current User.
+
+```js
+room.self().get(function(err, value, context) {
+  if (err) {
+    // could not retrieve the current users data
+    throw err;
+  }
+
+  console.log('current user data', value);
+});
+```
+
+#### PubNub
+
+The state API is used to get or set key/value pairs specific to a subscriber uuid. State information is supplied as a JSON object of key/value pairs.
+
+```js
+// Get state by uuid.
+
+pubnub.state({
+  channel  : "my_channel",
+  uuid     : "my_uuid",
+  callback : function(m){console.log(m)},
+  error    : function(m){console.log(m)}
+);
+```
 
 ### user
 
-n/a - convenience method
+#### GoInstant
+
+Returns the Key reference to a User for the given user id.
+
+```js
+var userKey = room.user('guest:123456');
+userKey.get(function(err, value, context) {
+  if (err) {
+    // could not retrieve the users data
+    throw err;
+  }
+
+  console.log('user data', value);
+});
+```
+
+#### PubNub
+
+N/A - Convenience method
 
 ### users
 
-here_now
+#### GoInstant
+
+Use room.users.get to get all the users in a room.
+
+```js
+room.users.get(function(err, usersObj, context) {
+  if (err) {
+    // A problem occurred during the get.
+  }
+
+  // Examine the usersObj.
+});
+```
+
+#### PubNub
+
+You can obtain information about the current state of a channel including a list of unique user-ids currently subscribed to the channel and the total occupancy count of the channel by calling the here_now() function in your application.
+
+```js
+// Get List of Occupants and Occupancy Count.
+
+pubnub.here_now({
+  channel : 'my_channel',
+  callback : function(m){console.log(m)}
+});
+```
 
 ### events
 
-join / leave -> presence
+#### GoInstant
 
-------------------
+A Room object can be observed for protocol-level events using Room#on. These are the events that can be monitored:
 
-Other notes
+```js
+room.on('join', function(userObject) {
+  console.log(userObject.displayName + ' has joined the room!');
+});
+```
+
+#### PubNub
+
+The Presence Detection event stream includes the following events for a channel:
+
+* join - A user subscribes to channel.
+* leave - A user unsubscribes from channel.
+* timeout - A user is disconnected from a channel.
+
+```js
+pubnub.subscribe({
+  channel: "my_channel",
+  presence: function(m){
+
+    // presence goes here
+    console.log(m)
+
+  },
+  message: function(m){console.log(m)}
+});
+```
+
+## Other notes
 
 ### Comparison
 
