@@ -39,7 +39,6 @@ var options2 = {
 };
 
 // THE SPECIAL SAUCE
-
 var conn2 = new goinstant2.Connection(App.pubnubSettings.url, options2);
 
 conn2.subscribe({

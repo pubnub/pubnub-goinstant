@@ -1,7 +1,72 @@
+var PNGI_Channel = function PNGI_Connection(pubnub_connection){
 
-function PNGI_Room = function(){
+    var _pubnub = pubnub_connection;
 
-}
+    return {
+
+    }
+};
+
+var PNGI_Room = function PNGI_Connection(name, pubnub_connection, user){
+
+    var _roomName = name;
+    var _pubnub = pubnub_connection;
+    var _user = user;
+
+    var _onEvents = {
+        join: null,
+        leave: null
+    };
+
+    function _presence(msg) {
+        if (msg.action === 'join') {
+            if (typeof _onEvents.join === 'function') {
+                _onEvents.join({ user: msg.uuid });
+            }
+        }
+        else if (msg.action === 'leave' || msg.action === 'timeout') {
+
+        }
+    }
+
+    function _message(msg, env, channel) {
+        // Ignore messages on this channel
+    }
+
+    return {
+        join: function(callback){
+            _pubnub.subscribe({
+                channel: _roomName,
+                presence: function(msg) {
+                    _presence(msg);
+                },
+                message: function(msg, env, ch) {
+                    _message(msg, env, ch);
+                }
+            });
+        },
+        leave: function()
+        on: function(event, fn){
+            if (event === 'join') {
+                _onEvents.join = fn;
+            }
+            else if (event === 'leave') {
+                _onEvents.leave = fn;
+            }
+        }
+    }
+};
+
+var PNGI_Connection = function PNGI_Connection(pubnub_connection){
+
+    var _pubnub = pubnub_connection;
+
+    return {
+        room: function(name) {
+            return new PNGI_Room(_pubnub);
+        }
+    }
+};
 
 var pubnub_goinstant = (function () {
     var instance;
@@ -76,7 +141,7 @@ var pubnub_goinstant = (function () {
                     subscribe_key: keys[1],
                     secret_key: keys[2]
                 });
-                return _pubnub;
+                return new PNGI_Connection(_pubnub);
             },
             room: function(){
 
