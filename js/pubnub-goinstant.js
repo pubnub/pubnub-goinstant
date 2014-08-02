@@ -97,7 +97,7 @@ var pubnub_goinstant = (function () {
         };
     }
 
-    return {
+    return { 
 
         // Get the Singleton instance if one exists
         // or create one if it doesn't
