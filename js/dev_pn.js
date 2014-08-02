@@ -41,9 +41,8 @@ var options2 = {
 // THE SPECIAL SAUCE
 var conn2 = new goinstant2.Connection(App.pubnubSettings.url, options2);
 
-conn2.subscribe({
-    channel: "jasdeep",
-    message: function(m) {console.log(m);}
-});
+var room = conn2.room("jasdeep");
+room.join();
+
 
 

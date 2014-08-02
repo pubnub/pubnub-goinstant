@@ -65,7 +65,7 @@ var PNGI_Connection = function PNGI_Connection(pubnub_connection){
 
     return {
         room: function(name) {
-            return new PNGI_Room(_pubnub);
+            return new PNGI_Room(name, _pubnub);
         }
     }
 };
@@ -133,7 +133,7 @@ var pubnub_goinstant = (function () {
                 if (hasOptions) {
                     if (_.has(options, 'user')) {
                         _user = options.user;
-                        console.log(_user);
+                        //console.log(_user);
                     }
                 }
 
@@ -144,9 +144,6 @@ var pubnub_goinstant = (function () {
                     secret_key: keys[2]
                 });
                 return new PNGI_Connection(_pubnub);
-            },
-            room: function(){
-
             }
         };
     }
