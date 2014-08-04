@@ -62,16 +62,18 @@
              
              
              <p><strong>Step 1: </strong>The aim is to build a simple chat
-             application using PubNub. Initialization in GoInstant requires you to connect to a url using <br></br><pre>goinstant.connect(https://goinstant.net/ACCOUNT/APP)</pre>
-             to access and store data for your app.
-             In contrast, at PubNub we use publish and subscribe keys to initialize an instance of PubNub <br></br>
+             application using PubNub. HOW? <br>
+             At PubNub we use publish and subscribe keys to initialize an instance of PubNub <br></br>
              <pre>var pubnub = PUBNUB.init({
    publish_key: 'demo',
    subscribe_key: 'demo'
-});</pre></p>
+});</pre>
+	Initialization in GoInstant, on the other hand, requires you to connect to a url using <br></br><pre>goinstant.connect(https://goinstant.net/ACCOUNT/APP)</pre>
+             to access and store data for your app.
+</p>
              
               <p><strong>Step 2: </strong>Once you initialize, a user will be able to choose a username and a chat room(channel)
-             and voila - he can chat away to glory with just those two. Connection establishment is as simple as this. The username for a 
+             and voila - he can chat away to glory with just those two. The username for a 
              user can be set using uuid during initialization.<br></br>
              <pre>var pubnub = PUBNUB.init({
 	publish_key   : 'demo',
