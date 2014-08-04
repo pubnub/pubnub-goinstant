@@ -73,22 +73,35 @@
              and voila - he can chat away to glory with just those two. Connection establishment is as simple as this. The username for a 
              user can be set using uuid during initialization.<br></br>
              <pre>var pubnub = PUBNUB.init({
-	publish_key   : 'pub-c-b79d8c74-314a-4312-8852-a61ca49a5fd2',
-	subscribe_key : 'sub-c-4745b1e4-19ba-11e4-bbbf-02ee2ddab7fe',
+	publish_key   : 'demo',
+	subscribe_key : 'demo',
 	uuid : username
 	})</pre></p><br></br>
              
              
               <p><strong>Step 3: </strong>I did away with all the authentication required for using the GoInstant chat application.
              This can be easily added to your simple chat using PAM(PubNub Access Manager) which provides 
-             fine grain Publish and Subscribe permissions down to person, device or channel if needed. 
-           </p>
+             fine grain Publish and Subscribe permissions down to person, device or channel if needed. Sending and receiving messages
+             can be done using 'pubnub.publish() and pubnub.subscribe() as shown below:
+             
+              <pre> // Send chat messages
+    pubnub.bind( 'keyup', input, function(e) {
+        (e.keyCode || e.charCode) === 13 && pubnub.publish({
+            channel : 'chatchannel',
+            message : 'Hey'
+        });
+     });   
+
+// Listening for messages from other users
+pubnub.subscribe({
+			channel : 'chatchannel',
+			message : console.log(message);	
+			});</pre></p>
               <br></br>
               
              
            
-      		 <p>Basically, you need just ten lines of code to build a chat application with PubNub. All you have
-      		 to do is to subscribe to the required chat channel and publish to the same. Different services like login, logout and authentication
+      		 <p>Basically, you need just ten lines of code to build a chat application with PubNub. Different services like login, logout and authentication
       		 can then be added to it based on your requirements. I am sure all of you GoInstant users will find this transition from
       		 GoInstant to PubNub super simple and seamless. PubNub just made your life much awesome.
            </p>  <br></br>
