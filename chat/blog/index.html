@@ -76,10 +76,10 @@
              and voila - he can chat away to glory with just those two. The username for a 
              user can be set using uuid during initialization.<br></br>
              <pre>var pubnub = PUBNUB.init({
-publish_key   : 'demo',
-subscribe_key : 'demo',
-uuid : username
-})</pre></p><br></br>
+	publish_key   : 'demo',
+	subscribe_key : 'demo',
+	uuid : username
+	})</pre></p><br></br>
              
              
               <p><strong>Step 3: </strong>I did away with all the authentication required for using the GoInstant chat application.
@@ -97,8 +97,8 @@ uuid : username
 
 // Listening for messages from other users
 pubnub.subscribe({
-channel : 'chatchannel',
-message : console.log(message);	
+	channel : 'chatchannel',
+	message : console.log(message);	
 });</pre></p>
               <br></br>
               
