@@ -38,11 +38,57 @@ var options2 = {
     rooms: ['lobby', 'chat'],
 };
 
-// THE SPECIAL SAUCE
-var conn2 = new goinstant2.Connection(App.pubnubSettings.url, options2);
+console.log("");
+console.log("CONNECT WITH CALLBACK");
 
-var room = conn2.room("jasdeep");
-room.join();
+// Connect with Promise
+var conn1= new goinstant2.Connection(App.pubnubSettings.url);
 
+conn1.connect(function(err){
+    if (err) {
+        // there was an error connecting OR the token was invalid.
+        return;
+    }
+
+    var room = conn1.room('public-stocks');
+    room.join(function(err) {
+        if (err) {
+            // there as an error joining the room
+            return;
+        }
+
+        var key = room.key('/stock-prices/CRM');
+        key.get(function(err, value, context) {
+            if (err) {
+                // could not retrieve the value
+            }
+
+            // display the data.
+        });
+    });
+});
+
+console.log("");
+console.log("CONNECT WITH PROMISE");
+
+// Connect with Promise
+var conn2 = goinstant2.connect(App.pubnubSettings.url, options2);
+
+conn2.then(function(result) {
+    console.log('connection: ', result.connection);
+    console.log('rooms: ', result.rooms);
+    _.forEach(result.rooms, function(r) {
+        console.log(r.joined());
+    });
+    setTimeout(function(){
+        _.forEach(result.rooms, function(r) {
+            console.log(r.joined());
+        });
+    }, 10000);
+});
+
+conn2.catch(function(err) {
+    console.log('Error connecting:', err);
+});
 
 

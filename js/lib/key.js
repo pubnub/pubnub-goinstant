@@ -1,7 +1,7 @@
-goinstant2.Key = function Key(context, roomName, keyName, pubnubConnection){
+goinstant2.Key = function Key(context, roomName, keyName){
 
     var _context = context;
-    var _pubnub = pubnubConnection;
+    var _pubnub = _context.pubnub;
     var _roomID = roomName;
     var _keyID = keyName;
 
@@ -27,6 +27,9 @@ goinstant2.Key = function Key(context, roomName, keyName, pubnubConnection){
         },
         parent: function(){
             console.log("TODO: return parent key");
+        },
+        then: function(fn) {
+            fn(_context);
         }
     };
 };

@@ -1,12 +1,7 @@
-goinstant2.Room = function Room(context, name, user){ 
+goinstant2.BaseClasses.room = stampit().enclose(function () {
 
-    var _context = context;
-    _context.room = this;
 
-    var _pubnub = context.pubnub;
-
-    var _roomName = name;
-    var _user = user;
+    var _context, _pubnub, _roomName, _pnRoomName, _user, _selfKey;
 
     var _onEvents = {
         join: null,
@@ -15,11 +10,12 @@ goinstant2.Room = function Room(context, name, user){
         leaveLocal: null
     };
 
-    var _state = {
-        joined: false
-    };
+    var _joined = false;
+
 
     function _presence(msg) {
+        LOG("PUBNUB subscribe to " + _pnRoomName, "Room", "_presence[" + _roomName + "]");
+
         if (msg.action === 'join') {
             if (typeof _onEvents.join === 'function') {
                 _onEvents.join({ user: msg.uuid });
@@ -38,36 +34,158 @@ goinstant2.Room = function Room(context, name, user){
         // Ignore messages on this channel
     }
 
-    return {
-        join: function(callback) {
+
+    // Public API
+    return stampit.mixIn(this, {
+
+        name: function (value) {
+            if (value) {
+                _roomName = value;
+                _pnRoomName = "ROOM:::" + value;
+                return this;
+            }
+            return _roomName;
+        },
+        context: function(value){
+            if (value) {
+                _context = value;
+                _pubnub = _context.pubnub;
+                _selfKey = new goinstant2.Key(_context, _roomName, ".users");
+                return this;
+            }
+            return context;
+        },
+        joined: function () {
+            return _joined;
+        },
+        join: function (a,b,c) {
+            LOG("PUBNUB subscribe to " + _roomName, "Room", "join");
+
+            var self = this;
+            var hasUser = false;
+            var hasOptions = false;
+            var hasCallback = false;
+            var usePromise = false;
+
+            var user, options, callback;
+
+            if (hasValue(a) && hasValue(b) && hasValue(c)) {
+                hasUser = true;
+                hasOptions = true;
+                hasCallback = true;
+                user = a;
+                options = b;
+                callback = c;
+            }
+            else if (hasValue(a) && hasValue(b)) {
+                hasUser = true;
+                hasCallback = true;
+                user = a;
+                callback = b;
+            }
+            else if (hasValue(a)) {
+                hasCallback = true;
+                callback = a;
+            }
+            else {
+                usePromise = true;
+            }
+
             var subscribeInfo = {
-                channel: _roomName,
+                channel: _pnRoomName,
                 presence: function (msg) {
                     _presence(msg);
                 },
                 message: function (msg, env, ch) {
                     _message(msg, env, ch);
                 },
-                connect: function() {
-                    this._state.joined = true;
+                connect: function () {
+                    LOG("PUBNUB connected to " + _pnRoomName, "Room", "join._pubnub.subscribe.connect");
+                    _joined = true;
                 },
-                disconnect: function() {
-                    this._state.joined = false;
+                disconnect: function () {
+                    LOG("PUBNUB disconnected " + _pnRoomName, "Room", "join._pubnub.subscribe.disconnect");
+                    _joined = false;
+                    console.log(_state);
                 }
             };
 
-            if (_user.displayName !== 'undefined') {
-                subscribeInfo.state =  { id: _user.id, displayName: _user.displayName }
+            // Add Randomized Guest Name if none provided
+            if (!hasUser || !hasValue(user.displayName)) {
+                user = {
+                    displayName: "Guest " + Math.floor((Math.random() * 100000) + 10000).toString()
+                };
             }
 
-            _pubnub.subscribe(subscribeInfo);
+            // Set the PUBNUB state object to the user object
+            subscribeInfo.state = user;
+
+
+            // If we are using a Q Promise, alter the subscribe params and defer resolution
+            if (usePromise) {
+                LOG("using promise", "Room", "join");
+
+                // Create a a promise object to be resolved
+                var defer = Q.defer();
+
+                // Redefine the connect to be when the promise is resolved
+                subscribeInfo.connect = function() {
+                    _joined = true;
+                    var resultObject = {
+                        err: null,
+                        room: self,
+                        user: user
+                    };
+                    defer.resolve(resultObject);
+                };
+
+                subscribeInfo.error = function(e) {
+                    defer.reject(new Error(e));
+                };
+
+                // Now do the subscribe
+                _pubnub.subscribe(subscribeInfo);
+
+                return defer.promise
+            }
+            else {
+                LOG("using callback", "Room", "join");
+
+                return this;
+            }
         },
-        leave: function() {
+        leave: function (callback) {
+            LOG("PUBNUB unsubscribe to " + _roomName, "Room", "leave");
             _pubnub.unsubscribe({
-                channel: _roomName
-            })
+                channel: _pnRoomName
+            });
+            if (isFunction(callback)) {
+                callback({ err: null });
+            }
+            return this;
         },
-        on: function(eventName, a, b){
+        self: function () {
+            LOG("", "Room", "self");
+            LOG("return data sync info (KEY) for user with userID", "Room", "TODO-user");
+            return _selfKey;
+        },
+        user: function (userID) {
+            LOG(userID, "Room", "user");
+            LOG("return data sync info (KEY) for user with userID", "Room", "TODO-user");
+            return null;
+        },
+        users: function () {
+            LOG("users collection", "Room", "users");
+            LOG("return data sync info (KEY) for user list", "Room", "TODO-users")
+            return null;
+        },
+        key: function (name) {
+            LOG(name, "Room", "key");
+            LOG("implement Key class", "Room", "TODO-key")
+            return null;
+        },
+        on: function (eventName, a, b) {
+            LOG(eventName, "Room", "on");
 
             var hasOptions = false;
             var hasCallback = false;
@@ -98,7 +216,9 @@ goinstant2.Room = function Room(context, name, user){
                 _onEvents.leave = callback;
             }
         },
-        off: function(eventName, a, b){
+        off: function (eventName, a, b) {
+            _self = this;
+            LOG(eventName, "Room", "off");
 
             var hasEventName = false;
             var hasOptions = false;
@@ -150,19 +270,9 @@ goinstant2.Room = function Room(context, name, user){
 
             }
 
-        },
-        self: function() {
-            console.log("TODO: return data sync info (KEY) for this user")
-        },
-        user: function(userID) {
-            console.log("TODO: return data sync info (KEY) for user with userID")
-        },
-        users: function() {
-            console.log("TODO: return data sync info (KEY) for user list")
-        },
-        key: function(name) {
-
         }
+    });
+});
 
-    }
-};
+
+

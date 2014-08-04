@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html>
+<head lang="en">
+    <meta charset="UTF-8">
+    <title></title>
+    <script src="http://code.jquery.com/qunit/qunit-1.14.0.js"></script>
+    <script src="//rawgit.com/pubnub/javascript/feature-pt74838232/web/pubnub.min.js"></script>
+    <script src="js/lib/stampit_0.7.1.js"></script>
+    <link rel="stylesheet" href="http://code.jquery.com/qunit/qunit-1.14.0.css" type="text/css"/>
+    <script>
+        window.goinstant2 = {};
+        window.goinstant2.BaseClasses = {};
+        window.App = {};
+        App.pubnubSettings = {
+            publish: "pub-c-b79d8c74-314a-4312-8852-a61ca49a5fd2",
+            subscribe: "sub-c-4745b1e4-19ba-11e4-bbbf-02ee2ddab7fe",
+            secret: "sec-c-OTY5NGI0ODgtMGRkNy00MDkyLWIxODQtN2NmNjhjNzQ4NmEz",
+            url: "https://pubnub/pub-c-b79d8c74-314a-4312-8852-a61ca49a5fd2/sub-c-4745b1e4-19ba-11e4-bbbf-02ee2ddab7fe/sec-c-OTY5NGI0ODgtMGRkNy00MDkyLWIxODQtN2NmNjhjNzQ4NmEz"
+        };
+        App.pubnubSettings2 = {
+            publish: "demo",
+            subscribe: "demo",
+            secret: "demo",
+            url: "https://pubnub/demo/demo/demo"
+        };
+
+        goinstant2.App = function App(){
+            var instance;
+
+            function init() {
+
+                // Private Members
+                var _useLogging = false;
+
+                // Private API
+
+
+                return {
+
+                    // Public Members
+
+                    // Public API
+
+                    log: function(text, prefix, method) {
+                        if (_useLogging) {
+
+                            var out = "";
+                            out += hasValue(prefix) ? prefix + ": " : "";
+                            out += hasValue(method) ? method + "() - " : "";
+                            out += text;
+
+                            console.log(out);
+                        }
+                    },
+                    logging: function(trueFalse) {
+                        _useLogging = trueFalse;
+                    }
+
+                };
+            }
+
+            return {
+
+                // Get the Singleton instance if one exists
+                // or create one if it doesn't
+                getInstance: function () {
+                    if ( !instance ) {
+                        instance = init();
+                    }
+                    return instance;
+                }
+
+            };
+
+        }();
+
+
+        window.goinstant2.App = goinstant2.App.getInstance();
+        goinstant2.App.logging(true);
+        LOG = goinstant2.App.log;
+    </script>
+    <script src="js/lib/connection.js"></script>
+</head>
+<body>
+
+<div id="qunit"></div>
+
+</body>
+</html>

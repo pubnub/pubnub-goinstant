@@ -21,7 +21,6 @@ var load_css = function(complete) {
 
         head.load({css_fontawesome: "//maxcdn.bootstrapcdn.com/font-awesome/4.1.0/css/font-awesome.min.css"}, function(){
             App.csslog("Font Awesome 4.1.0 loaded");
-            complete();
         });
 
         head.load({css_fontawesome: "index.css"}, function(){
