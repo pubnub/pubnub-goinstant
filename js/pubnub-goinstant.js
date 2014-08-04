@@ -2699,6 +2699,17 @@ goinstant2.App = function App(){
                     }
                 }
             },
+            error: function(errorObject, text, prefix, method) {
+                if (_useLogging) {
+
+                    var out = "";
+                    out += hasValue(prefix) ? prefix + ": " : "";
+                    out += hasValue(method) ? method + "() - " : "";
+                    out += text;
+                    console.error(out, errorObject);
+
+                }
+            },
             logging: function(trueFalse) {
                 _useLogging = trueFalse;
             }
@@ -2726,6 +2737,7 @@ window.goinstant2.App = goinstant2.App.getInstance();
 goinstant2.App.logging(true);
 LOG = goinstant2.App.log;
 INFO = goinstant2.App.info;
+ERROR = goinstant2.App.error;
 
 /* **********************************************
      Begin connection.js
@@ -2767,7 +2779,8 @@ goinstant2.BaseClasses.connection = stampit().enclose(function () {
         _context.keys = {
             publish_key: keys[0],
             subscribe_key: keys[1],
-            secret_key: keys[2]
+            secret_key: keys[2],
+            origin: "pubsub-beta.pubnub.com"
         }
 
         // Create PUBNUB object with the appropriate keys
@@ -2779,14 +2792,11 @@ goinstant2.BaseClasses.connection = stampit().enclose(function () {
 
     function _connectRoom(name){
 
-        if (!hasValue(_user)) {
-            _user = {
-                displayName: "Guest"
-            }
-        }
-
         var room = new goinstant2.BaseClasses.room();
-        room.name(name).context(_context).user(_user);
+        room.context(_context).name(name);
+        if (hasValue(_user)) {
+            room.user(_user);
+        }
         room.join();
         _context.rooms.push(room);
         return room;
@@ -2806,7 +2816,7 @@ goinstant2.BaseClasses.connection = stampit().enclose(function () {
             return _context;
         },
         connect: function(a,b) {
-
+            LOG(name, "Connection", "connect");
             var hasOptions = false;
             var hasCallback = false;
             var usePromise = false;
@@ -2918,6 +2928,7 @@ goinstant2.BaseClasses.connection = stampit().enclose(function () {
             }
         },
         room: function(name) {
+            LOG(name, "Connection", "connect");
             return _connectRoom(name);
         },
         rooms: function() {
@@ -2936,7 +2947,7 @@ goinstant2.BaseClasses.connection = stampit().enclose(function () {
 goinstant2.BaseClasses.room = stampit().enclose(function () {
 
 
-    var _context, _pubnub, _roomName, _pnRoomName, _user, _selfKey;
+    var _context, _pubnub, _roomName, _pnRoomName, _user, _selfKey, _syncObject;
 
     var _onEvents = {
         join: null,
@@ -2949,7 +2960,7 @@ goinstant2.BaseClasses.room = stampit().enclose(function () {
 
 
     function _presence(msg) {
-        LOG("PUBNUB subscribe to " + _pnRoomName, "Room", "_presence[" + _roomName + "]");
+        LOG(msg, "Room", "_presence[" + _pnRoomName + "]");
 
         if (msg.action === 'join') {
             if (typeof _onEvents.join === 'function') {
@@ -2974,6 +2985,7 @@ goinstant2.BaseClasses.room = stampit().enclose(function () {
     return stampit.mixIn(this, {
 
         name: function (value) {
+            LOG(value, "Room", "name");
             if (value) {
                 _roomName = value;
                 _pnRoomName = "ROOM:::" + value;
@@ -2982,16 +2994,37 @@ goinstant2.BaseClasses.room = stampit().enclose(function () {
             return _roomName;
         },
         context: function(value){
+            LOG(value, "Room", "context");
             if (value) {
                 _context = value;
                 _pubnub = _context.pubnub;
-                _selfKey = new goinstant2.Key(_context, _roomName, ".users");
                 return this;
             }
-            return context;
+            return _context;
         },
         joined: function () {
             return _joined;
+        },
+        self: function () {
+            LOG("", "Room", "self");
+            INFO("return data sync info (KEY) for user with userID", "Room", "TODO - user");
+            return _selfKey;
+        },
+        user: function (userID) {
+            LOG(userID, "Room", "user");
+            INFO("return data sync info (KEY) for user with userID", "Room", "TODO - user");
+            return null;
+        },
+        users: function () {
+            LOG("users collection", "Room", "users");
+            INFO("return data sync info (KEY) for user list", "Room", "TODO - users");
+            return null;
+        },
+        key: function (name) {
+            LOG(name, "Room", "key");
+            var k = new goinstant2.BaseClasses.key();
+            k.room(this).context(_context).roomName(_roomName).name(name);
+            return k;
         },
         join: function (a,b,c) {
             LOG("PUBNUB subscribe to " + _roomName, "Room", "join");
@@ -3002,20 +3035,22 @@ goinstant2.BaseClasses.room = stampit().enclose(function () {
             var hasCallback = false;
             var usePromise = false;
 
-            var user, options, callback;
+            var options, callback;
+
+            // *** Anaylze Parameters
 
             if (hasValue(a) && hasValue(b) && hasValue(c)) {
                 hasUser = true;
                 hasOptions = true;
                 hasCallback = true;
-                user = a;
+                _user = a;
                 options = b;
                 callback = c;
             }
             else if (hasValue(a) && hasValue(b)) {
                 hasUser = true;
                 hasCallback = true;
-                user = a;
+                _user = a;
                 callback = b;
             }
             else if (hasValue(a)) {
@@ -3025,6 +3060,46 @@ goinstant2.BaseClasses.room = stampit().enclose(function () {
             else {
                 usePromise = true;
             }
+
+
+            // *** Handle User Object settings
+
+            // If no user provided, but was set explicitly
+            if (!hasUser && hasValue(_user)) {
+                hasUser = true;
+            }
+            else {
+                _user = {};
+                hasUser = true;
+            }
+
+            // Add Randomized Guest Name if none provided
+            if (!hasValue(_user.displayName)) {
+                _user.displayName = "Guest " + Math.floor((Math.random() * 100000) + 10000).toString();
+            }
+
+            // Add Random UserID if none provided
+            if (!hasValue(_user.id)){
+                _user.id = _pubnub.uuid();
+            }
+
+            // *** Get Sync Object for this user
+
+            LOG("set sync object name " + _pnRoomName, "Room", "name");
+            _syncObject = _pnRoomName;
+
+            LOG("create data sync object for '.users'/" + _user.id + " in " + _pnRoomName, "Room", "name");
+            _selfKey = new goinstant2.BaseClasses.key();
+
+            var userPath = "'.users'" + "." + _user.id;
+            _selfKey.context(_context).syncObject(_syncObject).path(userPath , function(){
+                // When ready, set this users value at the path
+                _selfKey.set(_user);
+            });
+            _selfKey.info();
+
+
+            // *** Configure PUBNUB Subscription
 
             var subscribeInfo = {
                 channel: _pnRoomName,
@@ -3045,15 +3120,12 @@ goinstant2.BaseClasses.room = stampit().enclose(function () {
                 }
             };
 
-            // Add Randomized Guest Name if none provided
-            if (!hasUser || !hasValue(user.displayName)) {
-                user = {
-                    displayName: "Guest " + Math.floor((Math.random() * 100000) + 10000).toString()
-                };
-            }
 
             // Set the PUBNUB state object to the user object
-            subscribeInfo.state = user;
+            subscribeInfo.state = _user;
+
+
+            // *** Return Q Promise or execute callback
 
 
             // If we are using a Q Promise, alter the subscribe params and defer resolution
@@ -3069,7 +3141,7 @@ goinstant2.BaseClasses.room = stampit().enclose(function () {
                     var resultObject = {
                         err: null,
                         room: self,
-                        user: user
+                        user: _user
                     };
                     defer.resolve(resultObject);
                 };
@@ -3098,26 +3170,6 @@ goinstant2.BaseClasses.room = stampit().enclose(function () {
                 callback({ err: null });
             }
             return this;
-        },
-        self: function () {
-            LOG("", "Room", "self");
-            LOG("return data sync info (KEY) for user with userID", "Room", "TODO-user");
-            return _selfKey;
-        },
-        user: function (userID) {
-            LOG(userID, "Room", "user");
-            LOG("return data sync info (KEY) for user with userID", "Room", "TODO-user");
-            return null;
-        },
-        users: function () {
-            LOG("users collection", "Room", "users");
-            LOG("return data sync info (KEY) for user list", "Room", "TODO-users")
-            return null;
-        },
-        key: function (name) {
-            LOG(name, "Room", "key");
-            LOG("implement Key class", "Room", "TODO-key")
-            return null;
         },
         on: function (eventName, a, b) {
             LOG(eventName, "Room", "on");
@@ -3300,41 +3352,165 @@ goinstant2.Channel = function Channel(context, name){
      Begin key.js
 ********************************************** */
 
-goinstant2.Key = function Key(context, roomName, keyName){
+goinstant2.BaseClasses.key = stampit().enclose(function () {
 
-    var _context = context;
-    var _pubnub = _context.pubnub;
-    var _roomID = roomName;
-    var _keyID = keyName;
+    var _context, _pubnub, _room, _syncObject, _path, _syncData;
 
-    var _key = _roomID + "/" + keyName;
-    var _value = null;
+    var _syncedDataReady = false;
+    var _deferredOperations = [];
 
-    function _getValue() {
-        console.log("TODO: Key._getValue(" + key + ")");
-    }
+    // Public API
+    return stampit.mixIn(this, {
+        syncObject: function(value){
+            if (value) {
+                _syncObject = value;
+                return this;
+            }
+            return _syncObject;
+        },
+        path: function (value, onReady) {
+            var self = this;
+            if (value) {
+                _path = value.replace(/\//g, ".");
+                INFO("implement path hierarchy", "Key", "TODO - get");
 
-    return {
+                LOG("get synced object for SyncObject: " + _syncObject + " Path: " + _path, "Key", "path");
+                _syncData = _pubnub.get_synced_object({
+                    object_id: _syncObject,
+                    path: _path,
+                    connect: function(objectID) {
+                        LOG("synced object data has been retrieved for SyncObject: " + _syncObject + " Path: " + _path, "Key", "path - get_synced_object - connect");
+                        _syncedDataReady = true;
+                        _.forEach(_deferredOperations, function(d){
+                            if (d.action === "set") {
+                                this.set(d.value);
+                            }
+                            else if (d.action === "merge") {
+                                this.add(d.value);
+                            }
+                            else if (d.action === "remove") {
+                                this.remove();
+                            }
+                        });
+                        if (isFunction(onReady)){
+                            onReady();
+                        }
+                    },
+                    callback: function(actions) {
+                        for (var i = 0; i < actions.length; i++) {
+                            LOG(actions[i], "Key", "path - get_synced_object - callback");
+                        }
+                    },
+                    error: function(m) { ERROR(m, "get_synced_object", "Key", "path - get_synced_object - error"); }
+                });
+
+                return this;
+            }
+            return _path;
+        },
+        room: function(value){
+            if (value) {
+                _room = value;
+                return this;
+            }
+            return _room;
+        },
+        context: function(value){
+            if (value) {
+                _context = value;
+                _pubnub = _context.pubnub;
+                return this;
+            }
+            return _context;
+        },
         get: function(fn) {
+            LOG("", "Key", "get");
 
             var returnValues = {
                 err: null,
-                value: _value,
+                value: _syncData,
                 context: null
             };
             return returnValues;
         },
-        key: function(keyName) {
-            return new goinstant2.Key(_roomID, _keyID + "/" + keyName, _pubnub);
+        key: function(name) {
+            var k = new goinstant2.BaseClasses.key();
+            k.room(this).context(_context).roomName(_roomName).name(name).parent(this);
+            return k;
         },
         parent: function(){
-            console.log("TODO: return parent key");
+            if (value){
+                _parent = value;
+                return this;
+            }
+            return _parent;
         },
-        then: function(fn) {
-            fn(_context);
+        info: function() {
+            INFO("SyncObject: " + _syncObject + " Path: " + _path, "Key", "info")
+        },
+        add: function(value,a,b){
+            LOG(value, "Key", "add");
+            INFO("promise & callback", "Key", "TODO - add");
+            var generatedKey = _path + "." + _pubnub.uuid();
+
+            if (value && _syncedDataReady) {
+                _pubnub.merge({
+                    object_id: _syncObject,
+                    path: generatedKey,
+                    data: value,
+                    callback  : function(m) { LOG("Set successful", "Key", "add"); },
+                    error     : function(m) { ERROR(m, "Set error", "Key", "add"); }
+                });
+            }
+            else if (value && !_syncedDataReady) {
+                _deferredOperations.push({
+                    action: "merge",
+                    value: value
+                })
+            }
+            return this;
+        },
+        remove: function(a,b){
+            LOG("", "Key", "remove");
+            INFO("options, promise & callback", "Key", "TODO - remove");
+            if (value && _syncedDataReady) {
+                _pubnub.remove({
+                    object_id: _syncObject,
+                    path: _path,
+                    callback  : function(m) { LOG("Set successful", "Key", "remove"); },
+                    error     : function(m) { ERROR(m, "Set error", "Key", "remove"); }
+                });
+            }
+            else if (value && !_syncedDataReady) {
+                _deferredOperations.push({
+                    action: "remove",
+                    value: value
+                })
+            }
+            return this;
+        },
+        set: function(value, a, b){
+            LOG("value", "Key", "set");
+            INFO("options, promise & callback", "Key", "TODO - set");
+            if (value && _syncedDataReady) {
+                _pubnub.set({
+                    object_id: _syncObject,
+                    path: _path,
+                    data: value,
+                    callback  : function(m) { LOG("Set successful", "Key", "set"); },
+                    error     : function(m) { ERROR(m, "Set error", "Key", "set"); }
+                });
+            }
+            else if (value && !_syncedDataReady) {
+                _deferredOperations.push({
+                    action: "set",
+                    value: value
+                })
+            }
+            return this;
         }
-    };
-};
+    });
+});
 
 /* **********************************************
      Begin compiled.js

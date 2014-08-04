@@ -35,7 +35,7 @@ var load_jslibraries = function(complete) {
     head.load({js_goinstant: "//cdn.goinstant.net/v1/platform.min.js"}, function () {
         App.jslog("GoInstant v1 loaded");
 
-        head.load({js_pubnub: "//rawgit.com/pubnub/javascript/feature-pt74838232/web/pubnub.min.js"}, function(){
+        head.load({js_pubnub: "//rawgit.com/pubnub/javascript/feature-pt74838232-2/web/pubnub.js"}, function(){
             App.jslog("Pubnub 3.6.7 loaded")
 
             head.load({js_jquery: "//code.jquery.com/jquery-2.1.1.min.js"}, function(){

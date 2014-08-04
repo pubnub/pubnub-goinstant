@@ -77,14 +77,6 @@ var conn2 = goinstant2.connect(App.pubnubSettings.url, options2);
 conn2.then(function(result) {
     console.log('connection: ', result.connection);
     console.log('rooms: ', result.rooms);
-    _.forEach(result.rooms, function(r) {
-        console.log(r.joined());
-    });
-    setTimeout(function(){
-        _.forEach(result.rooms, function(r) {
-            console.log(r.joined());
-        });
-    }, 10000);
 });
 
 conn2.catch(function(err) {

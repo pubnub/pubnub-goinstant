@@ -50,6 +50,17 @@ goinstant2.App = function App(){
                     }
                 }
             },
+            error: function(errorObject, text, prefix, method) {
+                if (_useLogging) {
+
+                    var out = "";
+                    out += hasValue(prefix) ? prefix + ": " : "";
+                    out += hasValue(method) ? method + "() - " : "";
+                    out += text;
+                    console.error(out, errorObject);
+
+                }
+            },
             logging: function(trueFalse) {
                 _useLogging = trueFalse;
             }
@@ -77,3 +88,4 @@ window.goinstant2.App = goinstant2.App.getInstance();
 goinstant2.App.logging(true);
 LOG = goinstant2.App.log;
 INFO = goinstant2.App.info;
+ERROR = goinstant2.App.error;

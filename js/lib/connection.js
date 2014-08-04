@@ -34,7 +34,8 @@ goinstant2.BaseClasses.connection = stampit().enclose(function () {
         _context.keys = {
             publish_key: keys[0],
             subscribe_key: keys[1],
-            secret_key: keys[2]
+            secret_key: keys[2],
+            origin: "pubsub-beta.pubnub.com"
         }
 
         // Create PUBNUB object with the appropriate keys
@@ -46,14 +47,11 @@ goinstant2.BaseClasses.connection = stampit().enclose(function () {
 
     function _connectRoom(name){
 
-        if (!hasValue(_user)) {
-            _user = {
-                displayName: "Guest"
-            }
-        }
-
         var room = new goinstant2.BaseClasses.room();
-        room.name(name).context(_context).user(_user);
+        room.context(_context).name(name);
+        if (hasValue(_user)) {
+            room.user(_user);
+        }
         room.join();
         _context.rooms.push(room);
         return room;
@@ -73,7 +71,7 @@ goinstant2.BaseClasses.connection = stampit().enclose(function () {
             return _context;
         },
         connect: function(a,b) {
-
+            LOG(name, "Connection", "connect");
             var hasOptions = false;
             var hasCallback = false;
             var usePromise = false;
@@ -185,6 +183,7 @@ goinstant2.BaseClasses.connection = stampit().enclose(function () {
             }
         },
         room: function(name) {
+            LOG(name, "Connection", "connect");
             return _connectRoom(name);
         },
         rooms: function() {
