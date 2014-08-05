@@ -71,17 +71,25 @@ goinstant2.BaseClasses.room = stampit().enclose(function () {
             LOG(userID, "Room", "user");
             INFO("return data sync info (KEY) for user with userID", "Room", "TODO - user");
             if (_user && hasValue(_user.id) && userID === _user.id) {
-                _user = user;
                 return _selfKey;
             }
             else {
-                return _key(userID);
+                return _key("'.users'" + "." + _userID);
             }
         },
         users: function () {
             LOG("users collection", "Room", "users");
-            INFO("return data sync info (KEY) for user list", "Room", "TODO - users");
-            return null;
+            var users = new goinstant2.BaseClasses.key();
+
+            var usersPath = "'.users'";
+            users.room(this).context(_context).syncObject(_syncObject).path(usersPath);
+
+            users.startSync().then(function(){
+                LOG("sync ready", "Room", "users");
+                users.info();
+            });
+
+            return users;
         },
         key: function (name) {
 

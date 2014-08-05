@@ -257,7 +257,11 @@ goinstant2.BaseClasses.key = stampit().enclose(function () {
             return _parent;
         },
         info: function() {
-            INFO("SyncObject: " + _syncObject + " Path: " + _path, "Key", "info")
+            LOG_GROUP("Key: INFO()");
+            LOG(_syncObject, "Key", "key.objectID");
+            LOG(_path, "Key", "key.path");
+            LOG(_syncData.data, "Key", "key.value");
+            LOG_GROUP_END();
         },
         get: function(a) {
 
@@ -736,6 +740,10 @@ goinstant2.BaseClasses.key = stampit().enclose(function () {
 
                 }
             }
+            return this;
+        },
+        on: function(eventName, a, b) {
+
             return this;
         }
     });

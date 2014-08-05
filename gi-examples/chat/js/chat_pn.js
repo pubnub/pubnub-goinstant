@@ -26,17 +26,36 @@ $(function() {
     var $messages = $('.messages');
 
 
+    $.cookie.json = true;
+
+    var userInfo = $.cookie('userInfo');
+
+    console.log(userInfo);
+
+    var connect;
+
     console.group("connect");
-    var connect = goinstant.connect(url, { user: {id: 1234, displayName: "Eduardo" } });
+    if (typeof userInfo !== 'undefined') {
+        connect = goinstant.connect(url, { user: userInfo });
+    }
+    else {
+        connect = goinstant.connect(url);
+    }
     console.groupEnd();
 
     connect.then(function(result) {
 
+
         console.group("connect.then");
 
         conn = result.connection;
+        user = result.connection.user();
         room = result.rooms[0];
+
+        $.cookie('userInfo', user);
+
         messagesKey = room.key('messages');
+
 
 
         console.group("room.self.get()");

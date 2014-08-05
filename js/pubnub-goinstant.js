@@ -2749,24 +2749,19 @@ LOG_GROUP_END = function() {
      Begin connection.js
 ********************************************** */
 
-goinstant2.connect = function(url, a, b){
-    return new goinstant2.Connection(url).connect(a, b);
-
-//    // For each room to be joined, connect to it, and push into results array
-//    _.forEach(connectToRooms, function(r){
-//        var room = this.room(r);
-//        resultsArray.rooms.push(room);
-//    });
-
-};
-
 goinstant2.Connection = function(url) {
     return new goinstant2.BaseClasses.connection().url(url);
 };
 
+goinstant2.connect = function(url, a, b){
+    return new goinstant2.Connection(url).connect(a,b);
+};
+
+
 goinstant2.BaseClasses.connection = stampit().enclose(function () {
 
     var _user = null;
+    var _isGuest = false;
     var _pubnub = null;
 
     var _url, _publishKey, _subscribeKey, _secretKey;
@@ -2842,9 +2837,13 @@ goinstant2.BaseClasses.connection = stampit().enclose(function () {
             }
 
             if (hasOptions) {
-                if (_.has(options, 'user')) {
+                LOG(options, "Connection", "connect - hasOptions");
+
+                if (_.has(options, 'user') && hasValue(options.user)) {
                     _user = options.user;
-                    //console.log(_user);
+                }
+                else {
+                    _user = null;
                 }
 
                 if (_.has(options, "room")) {
@@ -2862,6 +2861,24 @@ goinstant2.BaseClasses.connection = stampit().enclose(function () {
                     }
                 }
             }
+
+            if (!hasValue(_user)) {
+                _user = {};
+
+                // Add Randomized Guest Name if none provided
+                if (!hasValue(_user.displayName)) {
+                    _user.displayName = "Guest " + Math.floor((Math.random() * 100000) + 10000).toString();
+                }
+
+                // Add Random UserID if none provided
+                if (!hasValue(_user.id)){
+                    _user.id = _pubnub.uuid();
+                }
+
+            }
+
+            _context.user = _user;
+            this.user();
 
             // If no rooms are specified, connect to the 'lobby' room by default
             if (connectToRooms.length == 0) {
@@ -2882,6 +2899,7 @@ goinstant2.BaseClasses.connection = stampit().enclose(function () {
                 if (hasValue(_user)) {
                     room.setUser(_user);
                 }
+
                 return room.join().then(function(result) {
                     _context.rooms.push(room);
                 });
@@ -2939,13 +2957,28 @@ goinstant2.BaseClasses.connection = stampit().enclose(function () {
         },
         room: function(name) {
             LOG(name, "Connection", "connect");
-            return _connectRoom(name);
+            var room = new goinstant2.BaseClasses.room();
+
+            room.context(_context).name(name);
+
+            if (hasValue(_user)) {
+                room.setUser(_user);
+            }
+
+            room.join().then(function(result) {
+                _context.rooms.push(room);
+                return room;
+            });
         },
         rooms: function() {
-
+            return _context.rooms;
         },
         isGuest: function() {
-            return false;
+            return _isGuest;
+        },
+        user: function() {
+            LOG(_user, "Connection", "user");
+            return _user;
         }
 
     });
@@ -3030,17 +3063,25 @@ goinstant2.BaseClasses.room = stampit().enclose(function () {
             LOG(userID, "Room", "user");
             INFO("return data sync info (KEY) for user with userID", "Room", "TODO - user");
             if (_user && hasValue(_user.id) && userID === _user.id) {
-                _user = user;
                 return _selfKey;
             }
             else {
-                return _key(userID);
+                return _key("'.users'" + "." + _userID);
             }
         },
         users: function () {
             LOG("users collection", "Room", "users");
-            INFO("return data sync info (KEY) for user list", "Room", "TODO - users");
-            return null;
+            var users = new goinstant2.BaseClasses.key();
+
+            var usersPath = "'.users'";
+            users.room(this).context(_context).syncObject(_syncObject).path(usersPath);
+
+            users.startSync().then(function(){
+                LOG("sync ready", "Room", "users");
+                users.info();
+            });
+
+            return users;
         },
         key: function (name) {
 
@@ -3651,7 +3692,11 @@ goinstant2.BaseClasses.key = stampit().enclose(function () {
             return _parent;
         },
         info: function() {
-            INFO("SyncObject: " + _syncObject + " Path: " + _path, "Key", "info")
+            LOG_GROUP("Key: INFO()");
+            LOG(_syncObject, "Key", "key.objectID");
+            LOG(_path, "Key", "key.path");
+            LOG(_syncData.data, "Key", "key.value");
+            LOG_GROUP_END();
         },
         get: function(a) {
 
@@ -4130,6 +4175,10 @@ goinstant2.BaseClasses.key = stampit().enclose(function () {
 
                 }
             }
+            return this;
+        },
+        on: function(eventName, a, b) {
+
             return this;
         }
     });

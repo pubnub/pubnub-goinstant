@@ -1,21 +1,16 @@
-goinstant2.connect = function(url, a, b){
-    return new goinstant2.Connection(url).connect(a, b);
-
-//    // For each room to be joined, connect to it, and push into results array
-//    _.forEach(connectToRooms, function(r){
-//        var room = this.room(r);
-//        resultsArray.rooms.push(room);
-//    });
-
-};
-
 goinstant2.Connection = function(url) {
     return new goinstant2.BaseClasses.connection().url(url);
 };
 
+goinstant2.connect = function(url, a, b){
+    return new goinstant2.Connection(url).connect(a,b);
+};
+
+
 goinstant2.BaseClasses.connection = stampit().enclose(function () {
 
     var _user = null;
+    var _isGuest = false;
     var _pubnub = null;
 
     var _url, _publishKey, _subscribeKey, _secretKey;
@@ -91,9 +86,13 @@ goinstant2.BaseClasses.connection = stampit().enclose(function () {
             }
 
             if (hasOptions) {
-                if (_.has(options, 'user')) {
+                LOG(options, "Connection", "connect - hasOptions");
+
+                if (_.has(options, 'user') && hasValue(options.user)) {
                     _user = options.user;
-                    //console.log(_user);
+                }
+                else {
+                    _user = null;
                 }
 
                 if (_.has(options, "room")) {
@@ -111,6 +110,24 @@ goinstant2.BaseClasses.connection = stampit().enclose(function () {
                     }
                 }
             }
+
+            if (!hasValue(_user)) {
+                _user = {};
+
+                // Add Randomized Guest Name if none provided
+                if (!hasValue(_user.displayName)) {
+                    _user.displayName = "Guest " + Math.floor((Math.random() * 100000) + 10000).toString();
+                }
+
+                // Add Random UserID if none provided
+                if (!hasValue(_user.id)){
+                    _user.id = _pubnub.uuid();
+                }
+
+            }
+
+            _context.user = _user;
+            this.user();
 
             // If no rooms are specified, connect to the 'lobby' room by default
             if (connectToRooms.length == 0) {
@@ -131,6 +148,7 @@ goinstant2.BaseClasses.connection = stampit().enclose(function () {
                 if (hasValue(_user)) {
                     room.setUser(_user);
                 }
+
                 return room.join().then(function(result) {
                     _context.rooms.push(room);
                 });
@@ -188,13 +206,28 @@ goinstant2.BaseClasses.connection = stampit().enclose(function () {
         },
         room: function(name) {
             LOG(name, "Connection", "connect");
-            return _connectRoom(name);
+            var room = new goinstant2.BaseClasses.room();
+
+            room.context(_context).name(name);
+
+            if (hasValue(_user)) {
+                room.setUser(_user);
+            }
+
+            room.join().then(function(result) {
+                _context.rooms.push(room);
+                return room;
+            });
         },
         rooms: function() {
-
+            return _context.rooms;
         },
         isGuest: function() {
-            return false;
+            return _isGuest;
+        },
+        user: function() {
+            LOG(_user, "Connection", "user");
+            return _user;
         }
 
     });
