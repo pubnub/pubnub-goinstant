@@ -45,18 +45,6 @@ goinstant2.BaseClasses.connection = stampit().enclose(function () {
         _context.pubnub = _pubnub;
     }
 
-    function _connectRoom(name){
-
-        var room = new goinstant2.BaseClasses.room();
-        room.context(_context).name(name);
-        if (hasValue(_user)) {
-            room.user(_user);
-        }
-        room.join();
-        _context.rooms.push(room);
-        return room;
-    }
-
     // Public API
     return stampit.mixIn(this, {
         url: function(value) {
@@ -71,7 +59,7 @@ goinstant2.BaseClasses.connection = stampit().enclose(function () {
             return _context;
         },
         connect: function(a,b) {
-            LOG(name, "Connection", "connect");
+            //LOG(name, "Connection", "connect");
             var hasOptions = false;
             var hasCallback = false;
             var usePromise = false;
@@ -133,9 +121,24 @@ goinstant2.BaseClasses.connection = stampit().enclose(function () {
             // RETURN RESULTS (callback and Q Promise)
             // ***********************************************************************
 
+            // Connect to all the rooms via Promises
+            var roomJoinChain = _.map(connectToRooms, function(name){
+
+                var room = new goinstant2.BaseClasses.room();
+
+                room.context(_context).name(name);
+
+                if (hasValue(_user)) {
+                    room.setUser(_user);
+                }
+                return room.join().then(function(result) {
+                    _context.rooms.push(room);
+                });
+            });
+
             // If we are using a Q Promise, alter the subscribe params and defer resolution
             if (usePromise) {
-                LOG("using promise", "Connection", "connect");
+                LOG("promise created", "Connection", "connect");
 
                 var defer = Q.defer();
 
@@ -144,22 +147,20 @@ goinstant2.BaseClasses.connection = stampit().enclose(function () {
                     rooms: []
                 };
 
-                INFO("Add Chained Promise Resolves to Room Connections");
-                _.forEach(connectToRooms, function(r){
-                    var room = _connectRoom(r);
-                    resultObject.rooms.push(room);
+                Q.allSettled(roomJoinChain).then(function(result){
+                    INFO("check for errors on room joins", "Connection", "TODO - connect");
+                    resultObject.rooms = _context.rooms;
+
+                    LOG("promise resolved", "Connection", "connect");
+                    defer.resolve(resultObject);
                 });
-
-                resultObject.connection = this;
-
-                defer.resolve(resultObject);
 
                 return defer.promise
 
             }
             else {
 
-                LOG("using callback", "Connection", "connect");
+                LOG("callback pending", "Connection", "connect");
 
                 var err = null;
                 var resultsArray = [err];
@@ -170,13 +171,16 @@ goinstant2.BaseClasses.connection = stampit().enclose(function () {
                 INFO("Connection Errors are only generated from Room objects", "Connection", "connect");
 
                 // Connect to Each Room specified
-                _.forEach(connectToRooms, function(r){
-                    var room = _connectRoom(r);
-                    resultsArray.push(room);
-                });
+                Q.allSettled(roomJoinChain).then(function(result){
+                    INFO("check for errors on room joins", "Connection", "TODO - connect");
+                    _.forEach(connectToRooms, function(r){
+                        resultsArray.push(r);
+                    });
 
-                // Execute Callback, with resultsArray as the function params
-                callback.apply(this, resultsArray);
+                    LOG("callback executing", "Connection", "connect");
+                    // Execute Callback, with resultsArray as the function params
+                    callback.apply(this, resultsArray);
+                });
 
                 return this;
 
@@ -188,6 +192,9 @@ goinstant2.BaseClasses.connection = stampit().enclose(function () {
         },
         rooms: function() {
 
+        },
+        isGuest: function() {
+            return false;
         }
 
     });

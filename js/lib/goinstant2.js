@@ -26,7 +26,7 @@ goinstant2.App = function App(){
                     out += hasValue(method) ? method + "() - " : "";
 
                     if (isObject(text)) {
-                        console.log(out, "%O", text);
+                        console.log(out, text);
                     }
                     else {
                         out += text;
@@ -89,3 +89,9 @@ goinstant2.App.logging(true);
 LOG = goinstant2.App.log;
 INFO = goinstant2.App.info;
 ERROR = goinstant2.App.error;
+LOG_GROUP = function(value) {
+    console.group(value)
+};
+LOG_GROUP_END = function() {
+    console.groupEnd();
+}

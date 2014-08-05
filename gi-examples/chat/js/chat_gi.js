@@ -73,7 +73,7 @@ $(function() {
     $li.addClass('message');
 
     var $img = $('<div class="avatar"><img /></div>').find('img');
-    $img.attr('src', message.avatar || '/img/avatar.png');
+    $img.attr('src', message.avatar || 'img/avatar.png');
 
     var $name = $('<div class="user-name"></div>').text(message.name);
     var $message = $('<div class="user-message"></div>').text(message.text);

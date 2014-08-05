@@ -2675,7 +2675,7 @@ goinstant2.App = function App(){
                     out += hasValue(method) ? method + "() - " : "";
 
                     if (isObject(text)) {
-                        console.log(out, "%O", text);
+                        console.log(out, text);
                     }
                     else {
                         out += text;
@@ -2738,6 +2738,12 @@ goinstant2.App.logging(true);
 LOG = goinstant2.App.log;
 INFO = goinstant2.App.info;
 ERROR = goinstant2.App.error;
+LOG_GROUP = function(value) {
+    console.group(value)
+};
+LOG_GROUP_END = function() {
+    console.groupEnd();
+}
 
 /* **********************************************
      Begin connection.js
@@ -2790,18 +2796,6 @@ goinstant2.BaseClasses.connection = stampit().enclose(function () {
         _context.pubnub = _pubnub;
     }
 
-    function _connectRoom(name){
-
-        var room = new goinstant2.BaseClasses.room();
-        room.context(_context).name(name);
-        if (hasValue(_user)) {
-            room.user(_user);
-        }
-        room.join();
-        _context.rooms.push(room);
-        return room;
-    }
-
     // Public API
     return stampit.mixIn(this, {
         url: function(value) {
@@ -2816,7 +2810,7 @@ goinstant2.BaseClasses.connection = stampit().enclose(function () {
             return _context;
         },
         connect: function(a,b) {
-            LOG(name, "Connection", "connect");
+            //LOG(name, "Connection", "connect");
             var hasOptions = false;
             var hasCallback = false;
             var usePromise = false;
@@ -2878,9 +2872,24 @@ goinstant2.BaseClasses.connection = stampit().enclose(function () {
             // RETURN RESULTS (callback and Q Promise)
             // ***********************************************************************
 
+            // Connect to all the rooms via Promises
+            var roomJoinChain = _.map(connectToRooms, function(name){
+
+                var room = new goinstant2.BaseClasses.room();
+
+                room.context(_context).name(name);
+
+                if (hasValue(_user)) {
+                    room.setUser(_user);
+                }
+                return room.join().then(function(result) {
+                    _context.rooms.push(room);
+                });
+            });
+
             // If we are using a Q Promise, alter the subscribe params and defer resolution
             if (usePromise) {
-                LOG("using promise", "Connection", "connect");
+                LOG("promise created", "Connection", "connect");
 
                 var defer = Q.defer();
 
@@ -2889,22 +2898,20 @@ goinstant2.BaseClasses.connection = stampit().enclose(function () {
                     rooms: []
                 };
 
-                INFO("Add Chained Promise Resolves to Room Connections");
-                _.forEach(connectToRooms, function(r){
-                    var room = _connectRoom(r);
-                    resultObject.rooms.push(room);
+                Q.allSettled(roomJoinChain).then(function(result){
+                    INFO("check for errors on room joins", "Connection", "TODO - connect");
+                    resultObject.rooms = _context.rooms;
+
+                    LOG("promise resolved", "Connection", "connect");
+                    defer.resolve(resultObject);
                 });
-
-                resultObject.connection = this;
-
-                defer.resolve(resultObject);
 
                 return defer.promise
 
             }
             else {
 
-                LOG("using callback", "Connection", "connect");
+                LOG("callback pending", "Connection", "connect");
 
                 var err = null;
                 var resultsArray = [err];
@@ -2915,13 +2922,16 @@ goinstant2.BaseClasses.connection = stampit().enclose(function () {
                 INFO("Connection Errors are only generated from Room objects", "Connection", "connect");
 
                 // Connect to Each Room specified
-                _.forEach(connectToRooms, function(r){
-                    var room = _connectRoom(r);
-                    resultsArray.push(room);
-                });
+                Q.allSettled(roomJoinChain).then(function(result){
+                    INFO("check for errors on room joins", "Connection", "TODO - connect");
+                    _.forEach(connectToRooms, function(r){
+                        resultsArray.push(r);
+                    });
 
-                // Execute Callback, with resultsArray as the function params
-                callback.apply(this, resultsArray);
+                    LOG("callback executing", "Connection", "connect");
+                    // Execute Callback, with resultsArray as the function params
+                    callback.apply(this, resultsArray);
+                });
 
                 return this;
 
@@ -2933,6 +2943,9 @@ goinstant2.BaseClasses.connection = stampit().enclose(function () {
         },
         rooms: function() {
 
+        },
+        isGuest: function() {
+            return false;
         }
 
     });
@@ -3010,10 +3023,19 @@ goinstant2.BaseClasses.room = stampit().enclose(function () {
             INFO("return data sync info (KEY) for user with userID", "Room", "TODO - user");
             return _selfKey;
         },
+        setUser: function(userObject) {
+            _user = userObject;
+        },
         user: function (userID) {
             LOG(userID, "Room", "user");
             INFO("return data sync info (KEY) for user with userID", "Room", "TODO - user");
-            return null;
+            if (_user && hasValue(_user.id) && userID === _user.id) {
+                _user = user;
+                return _selfKey;
+            }
+            else {
+                return _key(userID);
+            }
         },
         users: function () {
             LOG("users collection", "Room", "users");
@@ -3021,13 +3043,22 @@ goinstant2.BaseClasses.room = stampit().enclose(function () {
             return null;
         },
         key: function (name) {
-            LOG(name, "Room", "key");
+
             var k = new goinstant2.BaseClasses.key();
-            k.room(this).context(_context).roomName(_roomName).name(name);
+            k.room(this).context(_context).syncObject(_syncObject).path(name);
+
+            LOG("get sync object " + name, "Room", "key");
+
+            k.startSync().then(function(){
+                k.info();
+            });
+
             return k;
         },
         join: function (a,b,c) {
-            LOG("PUBNUB subscribe to " + _roomName, "Room", "join");
+            LOG_GROUP("Join Room " + _roomName);
+            LOG("join room " + _roomName, "Room", "join");
+            LOG("PUBNUB subscribe to " + _pnRoomName, "Room", "join");
 
             var self = this;
             var hasUser = false;
@@ -3085,18 +3116,23 @@ goinstant2.BaseClasses.room = stampit().enclose(function () {
 
             // *** Get Sync Object for this user
 
-            LOG("set sync object name " + _pnRoomName, "Room", "name");
+
             _syncObject = _pnRoomName;
 
-            LOG("create data sync object for '.users'/" + _user.id + " in " + _pnRoomName, "Room", "name");
+            LOG("create data sync object_id + " + _pnRoomName + ".'.users'/" + _user.id, "Room", "join");
             _selfKey = new goinstant2.BaseClasses.key();
 
             var userPath = "'.users'" + "." + _user.id;
-            _selfKey.context(_context).syncObject(_syncObject).path(userPath , function(){
-                // When ready, set this users value at the path
-                _selfKey.set(_user);
+            _selfKey.room(this).context(_context).syncObject(_syncObject).path(userPath).initializeData({
+                action: "merge",
+                value: _user
             });
-            _selfKey.info();
+
+            _selfKey.startSync().then(function(){
+                LOG("sync ready", "Room", "join");
+                _selfKey.info();
+            });
+
 
 
             // *** Configure PUBNUB Subscription
@@ -3130,7 +3166,7 @@ goinstant2.BaseClasses.room = stampit().enclose(function () {
 
             // If we are using a Q Promise, alter the subscribe params and defer resolution
             if (usePromise) {
-                LOG("using promise", "Room", "join");
+                LOG("promise created", "Room", "join");
 
                 // Create a a promise object to be resolved
                 var defer = Q.defer();
@@ -3143,21 +3179,25 @@ goinstant2.BaseClasses.room = stampit().enclose(function () {
                         room: self,
                         user: _user
                     };
+                    LOG("promise resolved", "Room", "join");
                     defer.resolve(resultObject);
                 };
 
                 subscribeInfo.error = function(e) {
+                    ERROR("promise rejected", "Room", "join");
                     defer.reject(new Error(e));
                 };
 
                 // Now do the subscribe
                 _pubnub.subscribe(subscribeInfo);
 
+                LOG_GROUP_END();
                 return defer.promise
             }
             else {
-                LOG("using callback", "Room", "join");
-
+                LOG("callback pending", "Room", "join");
+                INFO("callback", "Room", "TODO - join");
+                LOG_GROUP_END();
                 return this;
             }
         },
@@ -3356,8 +3396,14 @@ goinstant2.BaseClasses.key = stampit().enclose(function () {
 
     var _context, _pubnub, _room, _syncObject, _path, _syncData;
 
-    var _syncedDataReady = false;
+    var _syncInitiated = false;
+    var _syncInitialized = false;
+    var _syncReady = false;
+    var _syncPromise = Q.defer();
+
+    var _initialOperations = [];
     var _deferredOperations = [];
+    var _promiseChain = [];
 
     // Public API
     return stampit.mixIn(this, {
@@ -3368,45 +3414,214 @@ goinstant2.BaseClasses.key = stampit().enclose(function () {
             }
             return _syncObject;
         },
-        path: function (value, onReady) {
+        path: function (value, onResult) {
             var self = this;
             if (value) {
                 _path = value.replace(/\//g, ".");
                 INFO("implement path hierarchy", "Key", "TODO - get");
-
-                LOG("get synced object for SyncObject: " + _syncObject + " Path: " + _path, "Key", "path");
-                _syncData = _pubnub.get_synced_object({
-                    object_id: _syncObject,
-                    path: _path,
-                    connect: function(objectID) {
-                        LOG("synced object data has been retrieved for SyncObject: " + _syncObject + " Path: " + _path, "Key", "path - get_synced_object - connect");
-                        _syncedDataReady = true;
-                        _.forEach(_deferredOperations, function(d){
-                            if (d.action === "set") {
-                                this.set(d.value);
-                            }
-                            else if (d.action === "merge") {
-                                this.add(d.value);
-                            }
-                            else if (d.action === "remove") {
-                                this.remove();
-                            }
-                        });
-                        if (isFunction(onReady)){
-                            onReady();
-                        }
-                    },
-                    callback: function(actions) {
-                        for (var i = 0; i < actions.length; i++) {
-                            LOG(actions[i], "Key", "path - get_synced_object - callback");
-                        }
-                    },
-                    error: function(m) { ERROR(m, "get_synced_object", "Key", "path - get_synced_object - error"); }
-                });
-
                 return this;
             }
             return _path;
+        },
+        isSynced: function() {
+            return _syncReady;
+        },
+        initializeData: function(operation) {
+            if (!_syncInitiated) {
+                if (operation) {
+                    _initialOperations.push(operation);
+                    return this;
+                }
+            }
+            return _initialOperations;
+        },
+        startSync: function(){
+            var self = this;
+
+            // Only want to do this once
+            if (!_syncInitiated) {
+                _syncInitiated = true;
+
+                LOG_GROUP("Key: startSync() initiated");
+                LOG("initiated", "Key", "startSync");
+                LOG(_syncObject, "Key", "key.objectID");
+                LOG(_path, "Key", "key.path");
+                LOG_GROUP_END();
+
+                // Begin the syncing process
+                _syncData = _pubnub.get_synced_object({
+                    object_id: _syncObject,
+                    path: _path,
+                    connect: function (objectID) {
+
+                        LOG_GROUP("Key: " + _syncObject + " - connect() complete");
+                        LOG(_syncObject, "Key", "key.object_id");
+                        LOG(_path, "Key", "key.path");
+                        LOG(_syncData.data, "Key", "key.get");
+                        LOG_GROUP_END();
+
+                        // Execute any initialOperations Now that we are synced
+                        // these are provided before calling syncStart()/_syncInitiated
+                        // cannot be added once it has been started
+                        LOG_GROUP("Key: " + _syncObject + " - initializeData()");
+                        LOG(_syncObject, "Key", "key.object_id");
+                        LOG(_path, "Key", "key.path");
+                        LOG(_initialOperations, "Key", "startSync - initialOperations");
+
+                        var initializeChain = _.map(_initialOperations, function (d) {
+
+                            if (d.action === "set") {
+                                return self.set(d.value, { initializeOverride: true });
+                            }
+                            else if (d.action === "merge") {
+                                LOG("execute merge() - promise", "Room", "startSync - initialOperations");
+                                return self.merge(d.value, { initializeOverride: true });
+                            }
+                            else if (d.action === "add") {
+                                return self.add(d.value, { initializeOverride: true });
+                            }
+                            else if (d.action === "remove") {
+                                return self.remove({ initializeOverride: true });
+                            }
+                        });
+
+                        // When initialOperations are completed, execute deferredOperations
+                        // in order
+                        Q.allSettled(initializeChain).then(function(){
+
+                            LOG_GROUP_END();
+                            // Empty the collection, now that they are fulfilled
+                            _initialOperations = [];
+
+                            // Now that we have Initiated, and Initialized, set to true
+                            // new operations will not be added to deferred
+                            _syncInitialized = true;
+
+                            INFO("might need to add a deferred promise, to stop adding deferred operations");
+
+                            LOG_GROUP("Key: " + _syncObject + " - deferredOperations()");
+                            LOG(_syncObject, "Key", "key.object_id");
+                            LOG(_path, "Key", "key.path");
+                            LOG(_deferredOperations, "Room", "startSync - deferredOperations");
+
+                            var deferredChain = _.map(_deferredOperations, function (d) {
+
+                                if (d.action === "get"){
+                                    if (d.usePromise) {
+                                        LOG("execute get() - promise", "Room", "startSync - deferredOperations");
+                                        self.get(function(err, value, context){
+                                            var returnObject = {
+                                                err: err,
+                                                value: value,
+                                                context: context
+                                            };
+                                            console.log(returnObject);
+                                            d.defer.resolve(returnObject);
+                                        });
+                                        return d.defer;
+                                    }
+                                    else {
+                                        return self.get().then(function(result){
+                                            var returnArray = [null, value, _context];
+                                            d.callback.apply(this, returnArray);
+                                        });
+                                    }
+
+                                }
+                                else if (d.action === "set") {
+                                    LOG("execute set()", "Room", "startSync - deferredOperations")
+                                    if (d.usePromise) {
+                                        return self.set(d.value).then(function(result){
+                                            d.defer.resolve(result);
+                                        });
+                                    }
+                                    return self.set(d.value).then(function(result){
+                                        var returnArray = [null, value, _context];
+                                        d.callback.apply(this, returnArray);
+                                    });
+                                }
+                                else if (d.action === "add") {
+                                    LOG("execute add()", "Room", "startSync - deferredOperations")
+                                    if (d.usePromise) {
+                                        return self.add(d.value).then(function(result){
+                                            d.defer.resolve(result);
+                                        });
+                                    }
+                                    return self.add(d.value).then(function(result){
+                                        var returnArray = [null, value, _context];
+                                        d.callback.apply(this, returnArray);
+                                    });
+                                }
+                                else if (d.action === "merge") {
+                                    LOG("execute merge()", "Room", "startSync - deferredOperations")
+                                    if (d.usePromise) {
+                                        return self.merge(d.value).then(function(result){
+                                            d.defer.resolve(result);
+                                        });
+                                    }
+                                    return self.merge(d.value).then(function(result){
+                                        var returnArray = [null, value, _context];
+                                        d.callback.apply(this, returnArray);
+                                    });
+                                }
+                                else if (d.action === "remove") {
+                                    LOG("execute remove()", "Room", "startSync - deferredOperations")
+                                    if (d.usePromise) {
+                                        return self.remove().then(function(result){
+                                            d.defer.resolve(result);
+                                        });
+                                    }
+                                    return self.remove().then(function(result){
+                                        var returnArray = [null, value, _context];
+                                        d.callback.apply(this, returnArray);
+                                    });
+                                }
+                            });
+
+                            // Now we are ready to go
+                            Q.allSettled(deferredChain).then(function(){
+
+                                LOG_GROUP_END();
+
+                                _deferredOperations = [];
+                                _syncReady = true;
+
+                                LOG_GROUP("Key: " + _syncObject + " - startSync() promise resolved");
+                                LOG(_syncObject, "Key", "key.object_id");
+                                LOG(_path, "Key", "key.path");
+                                LOG(_syncData.data, "Key", "key.get");
+                                LOG_GROUP_END();
+
+                                _syncPromise.resolve({
+                                    err: null,
+                                    value: _syncData.data,
+                                    context: _context
+                                });
+                            });
+                        });
+
+                    },
+                    callback: function (actions) {
+                        LOG_GROUP("Key: " + _syncObject + " - get_synced_object - callback (updates)");
+                        LOG(_syncObject, "Key", "key.object_id");
+                        LOG(_path, "Key", "key.path");
+                        for (var i = 0; i < actions.length; i++) {
+                            LOG(actions[i], "Key", "path - get_synced_object - callback");
+                        }
+                        LOG(_syncData.data, "Key", "key.get");
+                        LOG_GROUP_END();
+                    },
+                    error: function (m) {
+                        LOG("Key: " + _syncObject + "." + _path + " - startSync promise rejected", "Key", "startSync");
+                        ERROR(m, "get_synced_object", "Key", "path - get_synced_object - error");
+                        _syncPromise.reject(new Error(m));
+                    }
+                });
+                return _syncPromise.promise;
+            }
+            else {
+                return _syncPromise.promise;
+            }
         },
         room: function(value){
             if (value) {
@@ -3423,16 +3638,6 @@ goinstant2.BaseClasses.key = stampit().enclose(function () {
             }
             return _context;
         },
-        get: function(fn) {
-            LOG("", "Key", "get");
-
-            var returnValues = {
-                err: null,
-                value: _syncData,
-                context: null
-            };
-            return returnValues;
-        },
         key: function(name) {
             var k = new goinstant2.BaseClasses.key();
             k.room(this).context(_context).roomName(_roomName).name(name).parent(this);
@@ -3448,64 +3653,482 @@ goinstant2.BaseClasses.key = stampit().enclose(function () {
         info: function() {
             INFO("SyncObject: " + _syncObject + " Path: " + _path, "Key", "info")
         },
-        add: function(value,a,b){
-            LOG(value, "Key", "add");
-            INFO("promise & callback", "Key", "TODO - add");
-            var generatedKey = _path + "." + _pubnub.uuid();
+        get: function(a) {
 
-            if (value && _syncedDataReady) {
-                _pubnub.merge({
+            var hasCallback = false;
+            var usePromise = false;
+
+            var callback;
+
+            if (hasValue(a)) {
+                hasCallback = true;
+                callback = a;
+            }
+            else {
+                usePromise = true;
+            }
+
+            if (!_syncInitialized) {
+                LOG(_syncObject + "." + _path + " - get() deferred");
+
+                var deferredOp = {
+                    action: "get",
+                    hasCallback: hasCallback,
+                    usePromise: usePromise
+                };
+
+                if (usePromise) {
+                    deferredOp.defer = Q.defer();
+                    _deferredOperations.push(deferredOp);
+                    return deferredOp.defer.promise;
+                }
+                else {
+                    deferredOp.callback = callback;
+                    _deferredOperations.push(deferredOp);
+                }
+            }
+            else {
+
+                var params = {
+                    object_id: _syncObject,
+                    path: _path
+                };
+
+                if (usePromise){
+                    var defer = Q.defer();
+
+                    var returnObject = {
+                        err: null,
+                        value: _syncData.data,
+                        context: _context
+                    };
+
+                    defer.resolve(returnObject);
+
+                    return defer.promise
+                }
+                else {
+                    LOG("get successful - callback", "Key", "get");
+                    var returnArray = [null, _syncData.data, _context];
+                    callback.apply(this, returnArray);
+                }
+            }
+            return this;
+        },
+        add: function(value, a, b){
+
+            var hasOptions = false;
+            var hasCallback = false;
+            var usePromise = false;
+
+            var options, callback;
+
+            if (hasValue(a) && hasValue(b)) {
+                hasOptions = true;
+                hasCallback = true;
+                options = a;
+                callback = b;
+            }
+            else if (hasValue(a)) {
+                if (isFunction(a)) {
+                    hasCallback = true;
+                    callback = a;
+                }
+                else {
+                    hasOptions = true;
+                    usePromise = true;
+                    options = a;
+                }
+            }
+            else {
+                usePromise = true;
+            }
+
+
+            var initializeComplete = _syncInitialized;
+
+            if (hasOptions) {
+                if (_.has(options, 'initializeOverride')) {
+                    initializeComplete = true;
+                }
+            }
+
+            if (!initializeComplete) {
+                LOG(_syncObject + "." + _path + " - add() deferred");
+
+                var deferredOp = {
+                    action: "add",
+                        value: value,
+                    hasCallback: hasCallback,
+                    usePromise: usePromise
+                };
+
+                if (usePromise) {
+                    deferredOp.defer = Q.defer();
+                    _deferredOperations.push(deferredOp);
+                    return deferredOp.defer.promise;
+                }
+                else {
+                    deferredOp.callback = callback;
+                    _deferredOperations.push(deferredOp);
+                }
+            }
+            else {
+
+                var generatedKey = _path + "." + _pubnub.uuid();
+                var params = {
                     object_id: _syncObject,
                     path: generatedKey,
-                    data: value,
-                    callback  : function(m) { LOG("Set successful", "Key", "add"); },
-                    error     : function(m) { ERROR(m, "Set error", "Key", "add"); }
-                });
-            }
-            else if (value && !_syncedDataReady) {
-                _deferredOperations.push({
-                    action: "merge",
-                    value: value
-                })
+                    data: value
+                };
+
+                if (usePromise){
+                    var defer = Q.defer();
+
+                    params.callback = function (m) {
+                        defer.resolve({
+                            err: null,
+                            newValue: value,
+                            context: _.merge(_context, { addedKey: generatedKey })
+                        });
+                        LOG("add successful - promise", "Key", "add");
+                    };
+
+                    params.error = function (m) {
+                        ERROR(m, "add error - promise", "Key", "add");
+                        defer.reject(new Error(m));
+                    };
+
+                    _pubnub.merge(params);
+                    return defer.promise
+                }
+                else {
+                    params.callback = function (m) {
+                        LOG("add successful - callback", "Key", "add");
+                        var returnArray = [null, value, _.merge(_context, { addedKey: generatedKey })];
+                        callback.apply(this, returnArray);
+                    };
+
+                    params.error = function (m) {
+                        ERROR(m, "add error - callback", "Key", "add");
+                        var returnArray = [m, null, _context];
+                        callback.apply(this, returnArray);
+                    };
+
+                }
             }
             return this;
         },
         remove: function(a,b){
-            LOG("", "Key", "remove");
-            INFO("options, promise & callback", "Key", "TODO - remove");
-            if (value && _syncedDataReady) {
-                _pubnub.remove({
-                    object_id: _syncObject,
-                    path: _path,
-                    callback  : function(m) { LOG("Set successful", "Key", "remove"); },
-                    error     : function(m) { ERROR(m, "Set error", "Key", "remove"); }
-                });
+
+            var hasOptions = false;
+            var hasCallback = false;
+            var usePromise = false;
+
+            var options, callback;
+
+            if (hasValue(a) && hasValue(b)) {
+                hasOptions = true;
+                hasCallback = true;
+                options = a;
+                callback = b;
             }
-            else if (value && !_syncedDataReady) {
-                _deferredOperations.push({
+            else if (hasValue(a)) {
+                if (isFunction(a)) {
+                    hasCallback = true;
+                    callback = a;
+                }
+                else {
+                    hasOptions = true;
+                    usePromise = true;
+                    options = a;
+                }
+            }
+            else {
+                usePromise = true;
+            }
+
+
+            var initializeComplete = _syncInitialized;
+
+            if (hasOptions) {
+                if (_.has(options, 'initializeOverride')) {
+                    initializeComplete = true;
+                }
+            }
+
+            if (!initializeComplete) {
+                LOG(_syncObject + "." + _path + " - remove() deferred");
+
+                var deferredOp = {
                     action: "remove",
-                    value: value
-                })
+                    hasCallback: hasCallback,
+                    usePromise: usePromise
+                };
+
+                if (usePromise) {
+                    deferredOp.defer = Q.defer();
+                    _deferredOperations.push(deferredOp);
+                    return deferredOp.defer.promise;
+                }
+                else {
+                    deferredOp.callback = callback;
+                    _deferredOperations.push(deferredOp);
+                }
+            }
+            else {
+                var params = {
+                    object_id: _syncObject,
+                    path: _path
+                };
+
+                if (usePromise){
+                    var defer = Q.defer();
+                    var lastValue = _syncData.data;
+                    INFO("add lastValue as option(default true right now)", "Key", "TODO - remove");
+
+                    params.callback = function (m) {
+                        defer.resolve({
+                            err: null,
+                            value: lastValue,
+                            context: _context
+                        });
+                        LOG("remove successful - promise", "Key", "remove");
+                    };
+
+                    params.error = function (m) {
+                        ERROR(m, "remove error - promise", "Key", "remove");
+                        defer.reject(new Error(m));
+                    };
+
+                    _pubnub.remove(params);
+                    return defer.promise
+                }
+                else {
+                    params.callback = function (m) {
+                        LOG("remove successful - callback", "Key", "remove");
+                        var returnArray = [null, value, _.merge(_context, { lastValue: lastValue })];
+                        callback.apply(this, returnArray);
+                    };
+
+                    params.error = function (m) {
+                        ERROR(m, "remove error - callback", "Key", "remove");
+                        var returnArray = [m, null, _context];
+                        callback.apply(this, returnArray);
+                    };
+
+                }
             }
             return this;
         },
         set: function(value, a, b){
-            LOG("value", "Key", "set");
-            INFO("options, promise & callback", "Key", "TODO - set");
-            if (value && _syncedDataReady) {
-                _pubnub.set({
+
+            var hasOptions = false;
+            var hasCallback = false;
+            var usePromise = false;
+
+            var options, callback;
+
+            if (hasValue(a) && hasValue(b)) {
+                hasOptions = true;
+                hasCallback = true;
+                options = a;
+                callback = b;
+            }
+            else if (hasValue(a)) {
+                if (isFunction(a)) {
+                    hasCallback = true;
+                    callback = a;
+                }
+                else {
+                    hasOptions = true;
+                    usePromise = true;
+                    options = a;
+                }
+            }
+            else {
+                usePromise = true;
+            }
+
+            var initializeComplete = _syncInitialized;
+
+            if (hasOptions) {
+                if (_.has(options, 'initializeOverride')) {
+                    initializeComplete = true;
+                }
+            }
+
+            if (!initializeComplete) {
+                LOG(_syncObject + "." + _path + " - set() deferred");
+
+                var deferredOp = {
+                    action: "set",
+                    value: value,
+                    hasCallback: hasCallback,
+                    usePromise: usePromise
+                };
+
+                if (usePromise) {
+                    deferredOp.defer = Q.defer();
+                    _deferredOperations.push(deferredOp);
+                    return deferredOp.defer.promise;
+                }
+                else {
+                    deferredOp.callback = callback;
+                    _deferredOperations.push(deferredOp);
+                }
+            }
+            else {
+
+                var generatedKey = _path + "." + _pubnub.uuid();
+                var params = {
+                    object_id: _syncObject,
+                    path: generatedKey,
+                    data: value
+                };
+
+                if (usePromise){
+                    var defer = Q.defer();
+
+                    params.callback = function (m) {
+                        defer.resolve({
+                            err: null,
+                            newValue: value,
+                            context: _.merge(_context, { addedKey: generatedKey })
+                        });
+                        LOG("set successful - promise", "Key", "set");
+                    };
+
+                    params.error = function (m) {
+                        ERROR(m, "set error - promise", "Key", "set");
+                        defer.reject(new Error(m));
+                    };
+
+                    _pubnub.merge(params);
+                    return defer.promise
+                }
+                else {
+                    params.callback = function (m) {
+                        LOG("set successful - callback", "Key", "set");
+                        var returnArray = [null, value, _context];
+                        callback.apply(this, returnArray);
+                    };
+
+                    params.error = function (m) {
+                        ERROR(m, "set error - callback", "Key", "set");
+                        var returnArray = [m, null, _context];
+                        callback.apply(this, returnArray);
+                    };
+
+                }
+            }
+            return this;
+        },
+        merge: function(value, a, b){
+
+            var hasOptions = false;
+            var hasCallback = false;
+            var usePromise = false;
+
+            var options, callback;
+
+            if (hasValue(a) && hasValue(b)) {
+                hasOptions = true;
+                hasCallback = true;
+                options = a;
+                callback = b;
+            }
+            else if (hasValue(a)) {
+                if (isFunction(a)) {
+                    hasCallback = true;
+                    callback = a;
+                }
+                else {
+                    hasOptions = true;
+                    usePromise = true;
+                    options = a;
+                }
+            }
+            else {
+                usePromise = true;
+            }
+
+
+            var initializeComplete = _syncInitialized;
+
+            if (hasOptions) {
+                if (_.has(options, 'initializeOverride')) {
+                    initializeComplete = true;
+                }
+            }
+
+
+            if (!initializeComplete) {
+                LOG(_syncObject + "." + _path + " - merge() deferred");
+
+                var deferredOp = {
+                    action: "merge",
+                    value: value,
+                    hasCallback: hasCallback,
+                    usePromise: usePromise
+                };
+
+                if (usePromise) {
+                    deferredOp.defer = Q.defer();
+                    _deferredOperations.push(deferredOp);
+                    return deferredOp.defer.promise;
+                }
+                else {
+                    deferredOp.callback = callback;
+                    _deferredOperations.push(deferredOp);
+                }
+            }
+            else {
+
+                var params = {
                     object_id: _syncObject,
                     path: _path,
-                    data: value,
-                    callback  : function(m) { LOG("Set successful", "Key", "set"); },
-                    error     : function(m) { ERROR(m, "Set error", "Key", "set"); }
-                });
-            }
-            else if (value && !_syncedDataReady) {
-                _deferredOperations.push({
-                    action: "set",
-                    value: value
-                })
+                    data: value
+                };
+
+                if (usePromise){
+                    var defer = Q.defer();
+
+                    LOG("merge promise created", "Key", "merge");
+
+                    params.callback = function (m) {
+                        defer.resolve({
+                            err: null,
+                            value: _syncData.data,
+                            context: _context
+                        });
+                        LOG("merge successful - promise resolved", "Key", "merge");
+                        LOG(value, "Key", "merge");
+                        LOG(_syncData.data, "Key", "merge")
+                    };
+
+                    params.error = function (m) {
+                        ERROR(m, "merge error - promise", "Key", "merge");
+                        defer.reject(new Error(m));
+                    };
+
+                    _pubnub.merge(params);
+                    return defer.promise
+                }
+                else {
+                    params.callback = function (m) {
+                        LOG("merge successful - callback", "Key", "merge");
+                        var returnArray = [null, _syncData.data, _context];
+                        callback.apply(this, returnArray);
+                    };
+
+                    params.error = function (m) {
+                        ERROR(m, "merge error - callback", "Key", "merge");
+                        var returnArray = [m, null, _context];
+                        callback.apply(this, returnArray);
+                    };
+
+                }
             }
             return this;
         }

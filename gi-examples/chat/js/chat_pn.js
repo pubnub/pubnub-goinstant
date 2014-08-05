@@ -1,5 +1,7 @@
 /* jshint browser:true */
 
+window.myWait = {};
+
 $(function() {
     'use strict';
 
@@ -23,23 +25,46 @@ $(function() {
     var $text = $('.text');
     var $messages = $('.messages');
 
-    var connect = goinstant.connect(url);
+
+    console.group("connect");
+    var connect = goinstant.connect(url, { user: {id: 1234, displayName: "Eduardo" } });
+    console.groupEnd();
 
     connect.then(function(result) {
+
+        console.group("connect.then");
+
         conn = result.connection;
         room = result.rooms[0];
         messagesKey = room.key('messages');
 
-        return room.self().get();
+
+        console.group("room.self.get()");
+
+        console.log(room.self());
+
+        window.myWait = room.self().get();
+        console.log(myWait);
+        console.log("waiting for room.self().get()...");
+        return window.myWait;
 
     }).then(function(result) {
+
+        console.groupEnd();
+        console.groupEnd();
+
+        console.log(result.value);
+
+        console.group("room.self().get().then");
+
         user = result.value;
+        console.log(result.value);
 
         if (conn.isGuest()) {
-            displayLogin();
+            //displayLogin();
 
         } else {
-            displayLogOut();
+            //displayLogOut();
         }
 
         $name.val(user.displayName);
@@ -52,15 +77,24 @@ $(function() {
             $avatar.append($img);
         }
 
-        return messagesKey.get();
+        console.groupEnd();
+
+        var m = messagesKey.get();
+
+        return m;
 
     }).then(function(result) {
+
+        console.group("messagesKey.get().then");
+
         var messages = result.value;
         var ordered = _.keys(messages).sort();
 
         _.each(ordered, function(id) {
             addMessage(messages[id]);
         });
+
+        console.groupEnd();
 
     }).fin(function() {
         var options = {
@@ -76,7 +110,7 @@ $(function() {
         $li.addClass('message');
 
         var $img = $('<div class="avatar"><img /></div>').find('img');
-        $img.attr('src', message.avatar || '/img/avatar.png');
+        $img.attr('src', message.avatar || 'img/avatar.png');
 
         var $name = $('<div class="user-name"></div>').text(message.name);
         var $message = $('<div class="user-message"></div>').text(message.text);

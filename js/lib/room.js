@@ -64,10 +64,19 @@ goinstant2.BaseClasses.room = stampit().enclose(function () {
             INFO("return data sync info (KEY) for user with userID", "Room", "TODO - user");
             return _selfKey;
         },
+        setUser: function(userObject) {
+            _user = userObject;
+        },
         user: function (userID) {
             LOG(userID, "Room", "user");
             INFO("return data sync info (KEY) for user with userID", "Room", "TODO - user");
-            return null;
+            if (_user && hasValue(_user.id) && userID === _user.id) {
+                _user = user;
+                return _selfKey;
+            }
+            else {
+                return _key(userID);
+            }
         },
         users: function () {
             LOG("users collection", "Room", "users");
@@ -75,13 +84,22 @@ goinstant2.BaseClasses.room = stampit().enclose(function () {
             return null;
         },
         key: function (name) {
-            LOG(name, "Room", "key");
+
             var k = new goinstant2.BaseClasses.key();
-            k.room(this).context(_context).roomName(_roomName).name(name);
+            k.room(this).context(_context).syncObject(_syncObject).path(name);
+
+            LOG("get sync object " + name, "Room", "key");
+
+            k.startSync().then(function(){
+                k.info();
+            });
+
             return k;
         },
         join: function (a,b,c) {
-            LOG("PUBNUB subscribe to " + _roomName, "Room", "join");
+            LOG_GROUP("Join Room " + _roomName);
+            LOG("join room " + _roomName, "Room", "join");
+            LOG("PUBNUB subscribe to " + _pnRoomName, "Room", "join");
 
             var self = this;
             var hasUser = false;
@@ -139,18 +157,23 @@ goinstant2.BaseClasses.room = stampit().enclose(function () {
 
             // *** Get Sync Object for this user
 
-            LOG("set sync object name " + _pnRoomName, "Room", "name");
+
             _syncObject = _pnRoomName;
 
-            LOG("create data sync object for '.users'/" + _user.id + " in " + _pnRoomName, "Room", "name");
+            LOG("create data sync object_id + " + _pnRoomName + ".'.users'/" + _user.id, "Room", "join");
             _selfKey = new goinstant2.BaseClasses.key();
 
             var userPath = "'.users'" + "." + _user.id;
-            _selfKey.context(_context).syncObject(_syncObject).path(userPath , function(){
-                // When ready, set this users value at the path
-                _selfKey.set(_user);
+            _selfKey.room(this).context(_context).syncObject(_syncObject).path(userPath).initializeData({
+                action: "merge",
+                value: _user
             });
-            _selfKey.info();
+
+            _selfKey.startSync().then(function(){
+                LOG("sync ready", "Room", "join");
+                _selfKey.info();
+            });
+
 
 
             // *** Configure PUBNUB Subscription
@@ -184,7 +207,7 @@ goinstant2.BaseClasses.room = stampit().enclose(function () {
 
             // If we are using a Q Promise, alter the subscribe params and defer resolution
             if (usePromise) {
-                LOG("using promise", "Room", "join");
+                LOG("promise created", "Room", "join");
 
                 // Create a a promise object to be resolved
                 var defer = Q.defer();
@@ -197,21 +220,25 @@ goinstant2.BaseClasses.room = stampit().enclose(function () {
                         room: self,
                         user: _user
                     };
+                    LOG("promise resolved", "Room", "join");
                     defer.resolve(resultObject);
                 };
 
                 subscribeInfo.error = function(e) {
+                    ERROR("promise rejected", "Room", "join");
                     defer.reject(new Error(e));
                 };
 
                 // Now do the subscribe
                 _pubnub.subscribe(subscribeInfo);
 
+                LOG_GROUP_END();
                 return defer.promise
             }
             else {
-                LOG("using callback", "Room", "join");
-
+                LOG("callback pending", "Room", "join");
+                INFO("callback", "Room", "TODO - join");
+                LOG_GROUP_END();
                 return this;
             }
         },
