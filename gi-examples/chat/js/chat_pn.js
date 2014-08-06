@@ -34,19 +34,14 @@ $(function() {
 
     var connect;
 
-    console.group("connect");
     if (typeof userInfo !== 'undefined') {
         connect = goinstant.connect(url, { user: userInfo });
     }
     else {
         connect = goinstant.connect(url);
     }
-    console.groupEnd();
 
     connect.then(function(result) {
-
-
-        console.group("connect.then");
 
         conn = result.connection;
         user = result.connection.user();
@@ -56,28 +51,22 @@ $(function() {
 
         messagesKey = room.key('messages');
 
+        console.log("room.self.get()");
 
+        var selfGet = room.self();
 
-        console.group("room.self.get()");
-
-        console.log(room.self());
-
-        window.myWait = room.self().get();
-        console.log(myWait);
-        console.log("waiting for room.self().get()...");
-        return window.myWait;
+        return selfGet.get();
 
     }).then(function(result) {
 
-        console.groupEnd();
-        console.groupEnd();
+        console.log("room.self().get().then");
 
-        console.log(result.value);
+        //console.log(result.value);
 
-        console.group("room.self().get().then");
+
 
         user = result.value;
-        console.log(result.value);
+        //console.log(result.value);
 
         if (conn.isGuest()) {
             //displayLogin();
@@ -96,15 +85,17 @@ $(function() {
             $avatar.append($img);
         }
 
-        console.groupEnd();
+//        messagesKey.remove().then(function(){
+//            return messagesKey.get();
+//        });
 
-        var m = messagesKey.get();
+        var mess = messagesKey.get();
 
-        return m;
+        return mess;
 
     }).then(function(result) {
 
-        console.group("messagesKey.get().then");
+        console.log("messagesKey.get().then");
 
         var messages = result.value;
         var ordered = _.keys(messages).sort();
@@ -113,7 +104,7 @@ $(function() {
             addMessage(messages[id]);
         });
 
-        console.groupEnd();
+        
 
     }).fin(function() {
         var options = {
@@ -154,7 +145,7 @@ $(function() {
         var message = {
             name: $name.val(),
             text: $text.val(),
-            avatar: user.avatarUrl
+            avatar: user.avatarUrl || "img/avatar.png"
         };
 
         if (message.name === '' || message.text === '') {

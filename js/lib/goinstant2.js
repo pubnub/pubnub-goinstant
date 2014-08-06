@@ -1,97 +1,108 @@
 window.goinstant2 = {};
 window.goinstant2.BaseClasses = {};
 
-goinstant2.App = function App(){
-    var instance;
+goinstant2.BaseClasses.logger = stampit().enclose(function () {
 
-    function init() {
+    var _useLogging = false;
+    var _useInfo = false;
 
-        // Private Members
-        var _useLogging = false;
+    // Public API
+    return stampit.mixIn(this, {
 
-        // Private API
+        debug: function(indents, classname, method, id, text, obj) {
+            if (_useLogging){
+                var out = "";
+                _.times(indents, function(n) { out += "\t"; });
 
-
-        return {
-
-            // Public Members
-
-            // Public API
-
-            log: function(text, prefix, method) {
-                if (_useLogging) {
-
-                    var out = "";
-                    out += hasValue(prefix) ? prefix + ": " : "";
-                    out += hasValue(method) ? method + "() - " : "";
-
-                    if (isObject(text)) {
-                        console.log(out, text);
-                    }
-                    else {
-                        out += text;
-                        console.log(out);
-                    }
+                out += classname;
+                out += "::" + method + "()";
+                out += " (" + id + ") ";
+                out += text;
+                if (obj && hasValue(obj)) {
+                    console.debug(out, obj);
                 }
-            },
-            info: function(text, prefix, method) {
-                if (_useLogging) {
-
-                    var out = "";
-                    out += hasValue(prefix) ? prefix + ": " : "";
-                    out += hasValue(method) ? method + "() - " : "";
-
-                    if (isObject(text)) {
-                        console.info(out, "%O", text);
-                    }
-                    else {
-                        out += text;
-                        console.info(out);
-                    }
+                else {
+                    console.debug(out);
                 }
-            },
-            error: function(errorObject, text, prefix, method) {
-                if (_useLogging) {
+            }
+        },
+        log: function (indents, classname, method, a, b) {
+            if (_useLogging) {
 
-                    var out = "";
-                    out += hasValue(prefix) ? prefix + ": " : "";
-                    out += hasValue(method) ? method + "() - " : "";
+                var out = "";
+                _.times(indents, function(n) { out += "\t"; });
+
+                out += classname;
+                out += "::" + method + "() ";
+
+
+                if (hasValue(a) && isObject(b)) {
+                    console.log(out + a.toString(), b);
+                }
+                else if (isObject(a) && hasValue(a)) {
+                    console.log(out, a);
+                }
+                else if (hasValue(a)) {
+                    console.log(out + " " + a.toString());
+                }
+                else {
+                    console.log(out);
+                }
+
+            }
+        },
+        info: function (text, prefix, method) {
+            if (_useLogging && _useInfo) {
+
+                var out = "";
+                out += hasValue(prefix) ? prefix + ": " : "";
+                out += hasValue(method) ? method + "() - " : "";
+
+                if (isObject(text)) {
+                    console.info(out, "%O", text);
+                }
+                else {
                     out += text;
-                    console.error(out, errorObject);
-
+                    console.info(out);
                 }
-            },
-            logging: function(trueFalse) {
-                _useLogging = trueFalse;
             }
+        },
+        error: function (classname, method, errorObject) {
+            if (_useLogging) {
 
-        };
-    }
-
-    return {
-
-        // Get the Singleton instance if one exists
-        // or create one if it doesn't
-        getInstance: function () {
-            if ( !instance ) {
-                instance = init();
+                var out = "";
+                out += hasValue(classname) ? classname + "::" : "";
+                out += hasValue(method) ? method + "() " : "";
+                console.error(out, errorObject);
             }
-            return instance;
+        },
+        useLogging: function (use) {
+            if (use) {
+                _useLogging = use;
+                return this;
+            }
+            return _useLogging;
         }
 
-    };
+    });
+});
 
-}();
+goinstant2.App = new goinstant2.BaseClasses.logger();
+goinstant2.App.useLogging(true);
 
-window.goinstant2.App = goinstant2.App.getInstance();
-
-goinstant2.App.logging(true);
 LOG = goinstant2.App.log;
 INFO = goinstant2.App.info;
 ERROR = goinstant2.App.error;
+DEBUG = goinstant2.App.debug;
+
 LOG_GROUP = function(value) {
-    console.group(value)
+    if (goinstant2.App.useLogging()) {
+        console.group(value);
+    }
 };
+
 LOG_GROUP_END = function() {
-    console.groupEnd();
-}
+    if (goinstant2.App.useLogging()) {
+        console.groupEnd();
+    }
+};

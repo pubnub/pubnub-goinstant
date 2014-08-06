@@ -14,7 +14,7 @@ goinstant2.BaseClasses.room = stampit().enclose(function () {
 
 
     function _presence(msg) {
-        LOG(msg, "Room", "_presence[" + _pnRoomName + "]");
+        DEBUG(1, "Room", "_presence[" + _pnRoomName + "]", "", "", msg);
 
         if (msg.action === 'join') {
             if (typeof _onEvents.join === 'function') {
@@ -39,7 +39,6 @@ goinstant2.BaseClasses.room = stampit().enclose(function () {
     return stampit.mixIn(this, {
 
         name: function (value) {
-            LOG(value, "Room", "name");
             if (value) {
                 _roomName = value;
                 _pnRoomName = "ROOM:::" + value;
@@ -48,7 +47,6 @@ goinstant2.BaseClasses.room = stampit().enclose(function () {
             return _roomName;
         },
         context: function(value){
-            LOG(value, "Room", "context");
             if (value) {
                 _context = value;
                 _pubnub = _context.pubnub;
@@ -60,7 +58,6 @@ goinstant2.BaseClasses.room = stampit().enclose(function () {
             return _joined;
         },
         self: function () {
-            LOG("", "Room", "self");
             INFO("return data sync info (KEY) for user with userID", "Room", "TODO - user");
             return _selfKey;
         },
@@ -77,7 +74,7 @@ goinstant2.BaseClasses.room = stampit().enclose(function () {
                 return _key("'.users'" + "." + _userID);
             }
         },
-        users: function () {
+        users: function (empty) {
             LOG("users collection", "Room", "users");
             var users = new goinstant2.BaseClasses.key();
 
@@ -87,6 +84,12 @@ goinstant2.BaseClasses.room = stampit().enclose(function () {
             users.startSync().then(function(){
                 LOG("sync ready", "Room", "users");
                 users.info();
+
+                if (empty) {
+                    users.remove().then(function(){
+                        users.info();
+                    });
+                }
             });
 
             return users;
@@ -96,24 +99,22 @@ goinstant2.BaseClasses.room = stampit().enclose(function () {
             var k = new goinstant2.BaseClasses.key();
             k.room(this).context(_context).syncObject(_syncObject).path(name);
 
-            LOG("get sync object " + name, "Room", "key");
+            DEBUG(1, "Room", "key", name, "sync object initialize");
 
-            k.startSync().then(function(){
-                k.info();
+            k.sync(function(){
+                DEBUG(1, "Room", "key", k.fullPath(), "sync object ready");
             });
 
             return k;
         },
         join: function (a,b,c) {
-            LOG_GROUP("Join Room " + _roomName);
-            LOG("join room " + _roomName, "Room", "join");
-            LOG("PUBNUB subscribe to " + _pnRoomName, "Room", "join");
 
             var self = this;
             var hasUser = false;
             var hasOptions = false;
             var hasCallback = false;
             var usePromise = false;
+            var deferred;
 
             var options, callback;
 
@@ -139,8 +140,13 @@ goinstant2.BaseClasses.room = stampit().enclose(function () {
             }
             else {
                 usePromise = true;
+                deferred = Q.defer();
+                DEBUG(1, "Room", "join", _pnRoomName, "promise created");
             }
 
+            _context.room = _roomName;
+
+            DEBUG(1, "Room", "join", _roomName, "start join process");
 
             // *** Handle User Object settings
 
@@ -168,7 +174,7 @@ goinstant2.BaseClasses.room = stampit().enclose(function () {
 
             _syncObject = _pnRoomName;
 
-            LOG("create data sync object_id + " + _pnRoomName + ".'.users'/" + _user.id, "Room", "join");
+            DEBUG(1, "Room", "join", _pnRoomName, "create this user sync object", { object_id: ".'.users'/" + _user.id, user: _user} );
             _selfKey = new goinstant2.BaseClasses.key();
 
             var userPath = "'.users'" + "." + _user.id;
@@ -177,77 +183,76 @@ goinstant2.BaseClasses.room = stampit().enclose(function () {
                 value: _user
             });
 
-            _selfKey.startSync().then(function(){
-                LOG("sync ready", "Room", "join");
-                _selfKey.info();
+            DEBUG(1, "Room", "join", _pnRoomName, "sync initiate");
+
+            _selfKey.sync(function(){
+
+                DEBUG(1, "Room", "join", _roomName, "sync complete");
+
+                // *** Configure PUBNUB Subscription
+                var subscribeInfo = {
+                    channel: _pnRoomName,
+                    presence: function (msg) {
+                        _presence(msg);
+                    },
+                    message: function (msg, env, ch) {
+                        _message(msg, env, ch);
+                    },
+                    connect: function () {
+                        LOG("PUBNUB connected to " + _pnRoomName, "Room", "join._pubnub.subscribe.connect");
+                        _joined = true;
+                    },
+                    disconnect: function () {
+                        LOG("PUBNUB disconnected " + _pnRoomName, "Room", "join._pubnub.subscribe.disconnect");
+                        _joined = false;
+                        console.log(_state);
+                    }
+                };
+
+
+                // Set the PUBNUB state object to the user object
+                subscribeInfo.state = _user;
+
+
+                // *** Return Q Promise or execute callback
+
+
+                // If we are using a Q Promise, alter the subscribe params and defer resolution
+                if (usePromise) {
+
+                    // Redefine the connect to be when the promise is resolved
+                    subscribeInfo.connect = function() {
+                        _joined = true;
+                        var resultObject = {
+                            err: null,
+                            room: self,
+                            user: _user
+                        };
+                        DEBUG(1, "Room", "join", _pnRoomName, "promise resolved");
+                        deferred.resolve(resultObject);
+                    };
+
+                    subscribeInfo.error = function(e) {
+                        ERROR("promise rejected", "Room", "join");
+                        deferred.reject(new Error(e));
+                    };
+
+                    // Now do the subscribe
+                    DEBUG(1, "Room", "join", _pnRoomName, "PUBNUB subscribe for presence");
+                    _pubnub.subscribe(subscribeInfo);
+
+                    return deferred.promise
+                }
+                else {
+                    LOG("callback pending", "Room", "join");
+                    INFO("callback", "Room", "TODO - join");
+                    return this;
+                }
+
             });
 
-
-
-            // *** Configure PUBNUB Subscription
-
-            var subscribeInfo = {
-                channel: _pnRoomName,
-                presence: function (msg) {
-                    _presence(msg);
-                },
-                message: function (msg, env, ch) {
-                    _message(msg, env, ch);
-                },
-                connect: function () {
-                    LOG("PUBNUB connected to " + _pnRoomName, "Room", "join._pubnub.subscribe.connect");
-                    _joined = true;
-                },
-                disconnect: function () {
-                    LOG("PUBNUB disconnected " + _pnRoomName, "Room", "join._pubnub.subscribe.disconnect");
-                    _joined = false;
-                    console.log(_state);
-                }
-            };
-
-
-            // Set the PUBNUB state object to the user object
-            subscribeInfo.state = _user;
-
-
-            // *** Return Q Promise or execute callback
-
-
-            // If we are using a Q Promise, alter the subscribe params and defer resolution
             if (usePromise) {
-                LOG("promise created", "Room", "join");
-
-                // Create a a promise object to be resolved
-                var defer = Q.defer();
-
-                // Redefine the connect to be when the promise is resolved
-                subscribeInfo.connect = function() {
-                    _joined = true;
-                    var resultObject = {
-                        err: null,
-                        room: self,
-                        user: _user
-                    };
-                    LOG("promise resolved", "Room", "join");
-                    defer.resolve(resultObject);
-                };
-
-                subscribeInfo.error = function(e) {
-                    ERROR("promise rejected", "Room", "join");
-                    defer.reject(new Error(e));
-                };
-
-                // Now do the subscribe
-                _pubnub.subscribe(subscribeInfo);
-
-                LOG_GROUP_END();
-                return defer.promise
-            }
-            else {
-                LOG("callback pending", "Room", "join");
-                INFO("callback", "Room", "TODO - join");
-                LOG_GROUP_END();
-                return this;
+                return deferred.promise;
             }
         },
         leave: function (callback) {
@@ -293,7 +298,6 @@ goinstant2.BaseClasses.room = stampit().enclose(function () {
             }
         },
         off: function (eventName, a, b) {
-            _self = this;
             LOG(eventName, "Room", "off");
 
             var hasEventName = false;

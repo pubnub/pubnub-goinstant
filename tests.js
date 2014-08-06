@@ -35,7 +35,7 @@ goinstant2.App = function App(){
                     console.log(out);
                 }
             },
-            logging: function(trueFalse) {
+            useLogging: function(trueFalse) {
                 _useLogging = trueFalse;
             }
 
@@ -57,7 +57,7 @@ goinstant2.App = function App(){
 
 }();
 window.goinstant2.App = goinstant2.App.getInstance();
-goinstant2.App.logging(true);
+goinstant2.App.useLogging(true);
 
 LOG = goinstant2.App.log;
 window.App = {};
