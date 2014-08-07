@@ -20,10 +20,12 @@ Learn more about moving from GoInstant to PubNub:
 # TODO (by method)
 
 #### Testing
-    ** Add QUnit tests for each class
+
+* Add QUnit tests for each class
 
 #### connect()
-    ** (complete)
+
+* (complete)
     
 #### Connection Methods
 
@@ -38,16 +40,18 @@ Learn more about moving from GoInstant to PubNub:
 * should disconnect all rooms
 * should free up any data sync objects
 
-** isGuest()
-    ** (complete)
-** loginUrl()
-** logoutUrl()
-** on() events
-    *** Since connections are made on "rooms" in PubNub, have to bubble these up
-    *** connect
-    *** disconnect
-    *** error
-** off() 
+##### isGuest()
+* (complete)
+
+##### loginUrl()
+##### logoutUrl()
+##### on() events
+* Since connections are made on "rooms" in PubNub, have to bubble these up
+* connect
+    * test nest
+* disconnect
+* error
+* off() 
     *** implement event deregister
 ** room()
     *** (todo)
