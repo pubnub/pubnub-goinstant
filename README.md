@@ -57,18 +57,19 @@ Learn more about moving from GoInstant to PubNub:
 * error
 
 ##### off() 
-    *** implement event deregister
+
+* implement event deregister
 
 ##### room()
 
 * (todo)
-** remove promise style, return object
-** initiates sync
-** all connection activity happens on get()
+    * remove promise style, return object
+    * initiates sync
+    * all connection activity happens on get()
 
 * (complete)
-** creates room object
-** joins room (subscribe to channel, create Key)
+    * creates room object
+    * joins room (subscribe to channel, create Key)
 
 ##### rooms()
 
