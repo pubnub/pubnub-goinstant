@@ -19,26 +19,37 @@ Learn more about moving from GoInstant to PubNub:
 
 # TODO (by method)
 
+
+
+
 ### Testing
 
 * Add QUnit tests for each class
 
+
+
+
 ### connect()
 
 * (complete)
+
+
+
+
     
 ### Connection Class
 
+
 ###### connect()
 
-* **[todo]** argument object for connection (as opposed to url)
-* **[todo]** add state information for user in pubnub object by uuid
+* **todo** argument object for connection (as opposed to url)
+* **todo** add state information for user in pubnub object by uuid
 
 ###### disconnect() 
 
-* **[todo]** implement callback & promise
-* **[todo]** should disconnect all rooms
-* **[todo]** should free up any data sync objects
+* **todo** implement callback & promise
+* **todo** should disconnect all rooms
+* **todo** should free up any data sync objects
 
 ###### isGuest()
 
@@ -57,13 +68,12 @@ Learn more about moving from GoInstant to PubNub:
 * connect
 * disconnect
 * error
-* **[todo]** Since connections are made on "rooms" in PubNub, have to bubble these up
-* **[todo]** Create Listener Arrays
+* **todo** Since connections are made on "rooms" in PubNub, have to bubble these up
+* **todo** Create Listener Arrays
     
 ###### off() 
 
-* **todo**
-** implement event deregister
+* **todo** implement event deregister
 
 ###### room()
 
@@ -79,84 +89,142 @@ Learn more about moving from GoInstant to PubNub:
 ###### rooms.get() (TBD)
 
 * **todo** implement a Room collection object that  
-* **todo** implement callback & promise for whole collection 
+* **todo** implement callback & promise for whole collection
+ 
+ 
+ 
+ 
     
 ### Room Class
-* channel()
-    *** add once Channel object factory is ready
-* connection()
-    *** (complete) returns _context.connection
-* equals()
-    *** need to implement
-* join()
-    *** implement callback
-    *** (complete)
-        **** creates Key for users (DataSync)
-        **** adds current user to the list
-        **** joins channel for presence
-* joined()
-    *** (complete)
-* key()
-    *** add key path parsing and nested keys
-    *** (complete)
-        **** initiate sync
-        **** defer operations until sync ready
-        **** 
+
+###### channel()
+
+* add once Channel object factory is ready
+
+###### connection()
+
+* (complete) returns _context.connection
+
+###### equals()
+
+* **todo** implementation
+
+###### join()
+
+* implement callback
+
+###### joined()
+
+* complete
+
+###### key()
+
+* **todo** add key path parsing and nested keys
     
-** leave()
-    *** disconnect all keys and unsubscribe all channels
-    *** (complete)
-        **** removes user from users Key (DataSync)
-** on() 
-    *** change to array of listeners instead of single listener
-    *** join
-        **** return context with pubnub.state info for uuid
-    *** leave
-        **** return context with pubnub.state info for uuid    
-** off()
-    *** remove listeners on match
-    *** remove all listeners (clear array)
-** self()
-    *** (complete)
-** user()
-    *** (complete) [verify]
-** users()
-    *** (complete) [verify]
+###### leave()
+
+* **todo** disconnect all keys and unsubscribe all channels
+    
+###### on() 
+
+* **todo** change to array of listeners instead of single listener
+* **todo** join return context with pubnub.state info for uuid
+* **todo** leave return context with pubnub.state info for uuid
+    
+###### off()
+
+* **todo** remove listeners on match
+* **todo** remove all listeners (clear array)
+
+###### self()
+
+* complete
+
+###### user()
+
+* complete
+
+###### users()
+
+* complete
+
         
-* Context
-    ** create object factory
-        ** should have methods for each context type (per class/operation)
-    
-* Key
-    ** Match "add" operations to received updates (via context)
-    ** remove()
-        *** change to inner function (like get()/add())
-        *** add deferred callbacks
-    ** parent()
-        *** create parent keys when needed (TBD)
-    ** merge()
-        *** change to inner function (like get()/add())
-    ** on()
-        *** add support for options { local: true }
-        *** add support for options { bubble: true }
-    ** off()
-        *** implement removal of listeners
-    
-* Channel
-    ** Create object factory
-    ** message()
-    ** on()
-        *** message (message received)
-    ** off()    
+        
+        
+        
+### Context Class
 
-* Authentication/Permissions
-    ** TBD how to match it up with PubNub PAM 
+* **todo** create object factory
+* **todo** should have methods for each context type (per class/operation)
+    
+### Key Class
 
-** User
-    ** Create object factory
+* **todo** Match "add" operations to received updates (via context)
+
+###### remove()
+
+* change to inner function (like get()/add())
+* add deferred callbacks
+
+###### parent()
+
+* create parent keys when needed (TBD)
+
+###### merge()
+
+* change to inner function (like get()/add())
+
+###### on()
+
+* add support for options { local: true }
+* add support for options { bubble: true }
+
+###### off()
+
+* implement removal of listeners
     
-* OT
-    ** TBD
+### Channel Class
+
+* Create object factory
+
+###### message()
+
+* implement
+
+###### on()
+
+* message (message received)
+
+###### off()
     
-* Query
-    ** TBD
+* implement
+
+
+
+
+### Authentication/Permissions
+
+* **TBD** how to match it up with PubNub PAM 
+
+
+
+
+
+### User
+
+* Create object factory class
+
+    
+    
+    
+### OT
+
+* **TBD**
+    
+    
+    
+    
+    
+### Query
+
+* **TBD**
