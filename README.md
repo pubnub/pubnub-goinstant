@@ -19,95 +19,107 @@ Learn more about moving from GoInstant to PubNub:
 
 # TODO (by method)
 
-#### Testing
+### Testing
 
 * Add QUnit tests for each class
 
-#### connect()
+### connect()
 
 * (complete)
     
-#### Connection Methods
+### Connection Class
 
-##### connect()
+###### connect()
 
 * argument object for connection (as opposed to url)
 * add state information for user in pubnub object
 
-##### disconnect() 
+###### disconnect() 
 
 * implement callback & promise
 * should disconnect all rooms
 * should free up any data sync objects
 
 ##### isGuest()
+
 * (complete)
 
 ##### loginUrl()
+
 ##### logoutUrl()
+
 ##### on() events
+
 * Since connections are made on "rooms" in PubNub, have to bubble these up
 * connect
     * test nest
 * disconnect
 * error
-* off() 
+
+##### off() 
     *** implement event deregister
-** room()
-    *** (todo)
-        **** remove promise style, return object
-        **** initiates sync
-        **** all connection activity happens on get()
-    *** (complete)
-        **** creates room object
-        **** joins room (subscribe to channel, create Key)
-** rooms()
-    *** currently returns connected rooms        
-** rooms.get() (TBD)
-    *** implement a Room collection 
-    *** implement callback & promise        
+
+##### room()
+
+* (todo)
+** remove promise style, return object
+** initiates sync
+** all connection activity happens on get()
+
+* (complete)
+** creates room object
+** joins room (subscribe to channel, create Key)
+
+##### rooms()
+
+* currently returns connected rooms        
+
+##### rooms.get() (TBD)
+
+* implement a Room collection 
+* implement callback & promise        
     
-* Room
-    ** channel()
-        *** add once Channel object factory is ready
-    ** connection()
-        *** (complete) returns _context.connection
-    ** equals()
-        *** need to implement
-    ** join()
-        *** implement callback
-        *** (complete)
-            **** creates Key for users (DataSync)
-            **** adds current user to the list
-            **** joins channel for presence
-    ** joined()
-        *** (complete)
-    ** key()
-        *** add key path parsing and nested keys
-        *** (complete)
-            **** initiate sync
-            **** defer operations until sync ready
-            **** 
-        
-    ** leave()
-        *** disconnect all keys and unsubscribe all channels
-        *** (complete)
-            **** removes user from users Key (DataSync)
-    ** on() 
-        *** change to array of listeners instead of single listener
-        *** join
-            **** return context with pubnub.state info for uuid
-        *** leave
-            **** return context with pubnub.state info for uuid    
-    ** off()
-        *** remove listeners on match
-        *** remove all listeners (clear array)
-    ** self()
-        *** (complete)
-    ** user()
-        *** (complete) [verify]
-    ** users()
-        *** (complete) [verify]
+### Room Class
+* channel()
+    *** add once Channel object factory is ready
+* connection()
+    *** (complete) returns _context.connection
+* equals()
+    *** need to implement
+* join()
+    *** implement callback
+    *** (complete)
+        **** creates Key for users (DataSync)
+        **** adds current user to the list
+        **** joins channel for presence
+* joined()
+    *** (complete)
+* key()
+    *** add key path parsing and nested keys
+    *** (complete)
+        **** initiate sync
+        **** defer operations until sync ready
+        **** 
+    
+** leave()
+    *** disconnect all keys and unsubscribe all channels
+    *** (complete)
+        **** removes user from users Key (DataSync)
+** on() 
+    *** change to array of listeners instead of single listener
+    *** join
+        **** return context with pubnub.state info for uuid
+    *** leave
+        **** return context with pubnub.state info for uuid    
+** off()
+    *** remove listeners on match
+    *** remove all listeners (clear array)
+** self()
+    *** (complete)
+** user()
+    *** (complete) [verify]
+** users()
+    *** (complete) [verify]
         
 * Context
     ** create object factory
