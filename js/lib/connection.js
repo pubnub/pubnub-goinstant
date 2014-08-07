@@ -36,6 +36,32 @@ goinstant2.BaseClasses.connection = stampit().enclose(function () {
         _pubnub = PUBNUB.init({});
     }
 
+    function _analyzeUser(user) {
+
+        if (hasValue(user)) {
+            _user = user;
+        }
+        else {
+            _user = {};
+        }
+
+        // Add Randomized Guest Name if none provided
+        if (!hasValue(_user.displayName)) {
+            _user.displayName = "Guest " + Math.floor((Math.random() * 100000) + 10000).toString();
+        }
+
+        // Add Random UserID if none provided
+        if (!hasValue(_user.id) && !hasValue(_user.token)){
+            _user.id = _pubnub.uuid();
+        }
+        else if (hasValue(_user.token)){
+            _user.id = _pubnub.uuid();
+        }
+
+        _context.user = _user;
+        _context.keys.state = _user;
+    }
+
     function _createPubnub() {
         // Create PUBNUB object with the appropriate keys
         _pubnub = PUBNUB.init(_context.keys);
@@ -98,13 +124,10 @@ goinstant2.BaseClasses.connection = stampit().enclose(function () {
                 LOG(options, "Connection", "connect - hasOptions");
 
                 if (_.has(options, 'user') && hasValue(options.user)) {
-                    _user = options.user;
-                    if (_.has(options.user, 'token')) {
-                        _user.id = user.token;
-                    }
+                    _analyzeUser(options.user);
                 }
                 else {
-                    _user = null;
+                    _analyzeUser();
                 }
 
                 if (_.has(options, "room")) {
@@ -123,24 +146,6 @@ goinstant2.BaseClasses.connection = stampit().enclose(function () {
                 }
             }
 
-            if (!hasValue(_user)) {
-
-                _user = {};
-
-                // Add Randomized Guest Name if none provided
-                if (!hasValue(_user.displayName)) {
-                    _user.displayName = "Guest " + Math.floor((Math.random() * 100000) + 10000).toString();
-                }
-
-                // Add Random UserID if none provided
-                if (!hasValue(_user.id)){
-                    _user.id = _pubnub.uuid();
-                }
-
-            }
-
-            _context.user = _user;
-            _context.keys.state = _user;
             _createPubnub();
 
             // If no rooms are specified, connect to the 'lobby' room by default

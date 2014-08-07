@@ -59,6 +59,7 @@ goinstant2.BaseClasses.room = stampit().enclose(function () {
         },
         self: function () {
             INFO("return data sync info (KEY) for user with userID", "Room", "TODO - user");
+            // If the _selfKey has completed initialization
             return _selfKey;
         },
         setUser: function(userObject) {

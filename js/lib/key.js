@@ -235,7 +235,7 @@ goinstant2.BaseClasses.key = stampit().enclose(function () {
                 var val = _syncData.get();
                 DEBUG(2, "Key", "sync", _fullPath, "sync ready");
                 //DEBUG(2, "Key", "sync", _fullPath, "value", val);
-                DEBUG(2, "Key", "sync", _fullPath, "initializeData");
+                DEBUG(2, "Key", "sync", _fullPath, "initializeData start");
                 _initialize(function(){
                     DEBUG(2, "Key", "sync", _fullPath, "initializeData complete");
                     _syncReady = true;
@@ -331,6 +331,8 @@ goinstant2.BaseClasses.key = stampit().enclose(function () {
                         context: _context
                     };
 
+                    LOG(2, "Key", "get", "get successful - promise", returnObject);
+
                     deferred.resolve(returnObject);
 
                     return deferred.promise;
@@ -374,11 +376,16 @@ goinstant2.BaseClasses.key = stampit().enclose(function () {
         },
         add: function(value, a, b){
 
+            DEBUG(2, "Key", "add", _fullPath, "");
+
+            var self = this;
+
             var hasOptions = false;
             var hasCallback = false;
             var usePromise = false;
+            var overrideSyncReady = false;
 
-            var options, callback;
+            var options, callback, deferred;
 
             if (hasValue(a) && hasValue(b)) {
                 hasOptions = true;
@@ -387,6 +394,7 @@ goinstant2.BaseClasses.key = stampit().enclose(function () {
                 callback = b;
             }
             else if (hasValue(a)) {
+
                 if (isFunction(a)) {
                     hasCallback = true;
                     callback = a;
@@ -395,108 +403,144 @@ goinstant2.BaseClasses.key = stampit().enclose(function () {
                     hasOptions = true;
                     usePromise = true;
                     options = a;
+                    deferred = Q.defer();
                 }
             }
             else {
                 usePromise = true;
+                deferred = Q.defer();
             }
 
 
-            var initializeComplete = _syncInitialized;
+            var handleAdd = function (innerValue, callback, promise, innerOptions, withPromise) {
+
+                var usePromise = false;
+                var hasCallback = false;
+                var hasOptions = false;
+
+                var callback, options, deferred;
+
+                if (hasValue(withPromise) && withPromise) {
+                    usePromise = true;
+                    deferred = promise;
+                }
+                else {
+                    hasCallback = true;
+                    callback = callback;
+                }
+
+                if (hasValue(innerOptions)){
+                    hasOptions = true;
+                    options = innerOptions;
+                }
+
+
+                if (usePromise) {
+
+                    var generatedKey = _path + ".";
+
+                    _pubnub.time(function(currentTime) {
+
+                        generatedKey += currentTime;
+
+                        var context = {
+                            addedKey: "/" + _path + "/" + generatedKey,
+                            currentKey: "/" + _path,
+                            targetKey: "/" + _path,
+                            userId: _context.user.id,
+                            command: "ADD",
+                            value: JSON.parse(JSON.stringify(value)),
+                            room: _context.room
+                        };
+
+                        value.context = context;
+
+
+                        var params = {
+                            object_id: _syncObject,
+                            path: generatedKey,
+                            data: value
+                        };
+
+                        if (usePromise) {
+
+                            params.callback = function (m) {
+                                deferred.resolve({
+                                    err: null,
+                                    newValue: value,
+                                    context: value.context
+                                });
+                                DEBUG(2, "Key", "add", _fullPath, "completed - promise");
+                            };
+
+                            params.error = function (m) {
+                                ERROR(m, "add error - promise", "Key", "add");
+                                deferred.reject(new Error(m));
+                            };
+
+                            _pubnub.set(params);
+
+                            return deferred.promise
+                        }
+                        else {
+                            params.callback = function (m) {
+                                DEBUG(2, "Key", "add", _fullPath, "completed - callback");
+                                var returnArray = [null, value, _.merge(_context, { addedKey: generatedKey })];
+                                callback.apply(this, returnArray);
+                            };
+
+                            params.error = function (m) {
+                                ERROR(m, "add error - callback", "Key", "add");
+                                var returnArray = [m, null, _context];
+                                callback.apply(this, returnArray);
+                            };
+
+                            _pubnub.set(params);
+
+                        }
+                    });
+
+                }
+                else {
+                    LOG(2, "Key", "add", "add successful - callback");
+                    var returnArray = [null, _syncData.get(), _context];
+                    callback.apply(this, returnArray);
+                }
+
+                return self;
+            };
+
+            var params = [value, callback, deferred, options, usePromise];
 
             if (hasOptions) {
                 if (_.has(options, 'initializeOverride')) {
-                    initializeComplete = true;
+                    overrideSyncReady = true;
                 }
             }
 
-            if (!initializeComplete) {
-                LOG(_syncObject + "." + _path + " - add() deferred");
+            if (!_syncReady && !overrideSyncReady) {
 
-                var deferredOp = {
-                    action: "add",
-                        value: value,
-                    hasCallback: hasCallback,
-                    usePromise: usePromise
+                var callbackInfo = {
+                    operation: "add",
+                    callback: handleAdd,
+                    params: params,
+                    self: self
                 };
 
+                _syncReadyCallbacks.push(callbackInfo);
+
+                LOG(2, "Key", "add", "not ready for add() operations", callbackInfo);
+
                 if (usePromise) {
-                    deferredOp.defer = Q.defer();
-                    _deferredOperations.push(deferredOp);
-                    return deferredOp.defer.promise;
+                    return deferred.promise;
                 }
                 else {
-                    deferredOp.callback = callback;
-                    _deferredOperations.push(deferredOp);
+                    return self;
                 }
             }
-            else {
 
-                var generatedKey = _path + ".";
+            return handleAdd.apply(this, params);
 
-                _pubnub.time(function(currentTime){
-
-                    generatedKey += currentTime;
-
-                    var context = {
-                        addedKey: "/" + _path + "/" + generatedKey,
-                        currentKey: "/" + _path,
-                        targetKey: "/" + _path,
-                        userId: _context.user.id,
-                        command: "ADD",
-                        value: JSON.parse(JSON.stringify(value)),
-                        room: _context.room
-                    };
-
-                    value.context = context;
-
-
-                    var params = {
-                        object_id: _syncObject,
-                        path: generatedKey,
-                        data: value
-                    };
-
-                    if (usePromise){
-                        var defer = Q.defer();
-
-                        params.callback = function (m) {
-                            defer.resolve({
-                                err: null,
-                                newValue: value,
-                                context: value.context
-                            });
-                            DEBUG(2, "Key", "add", _fullPath, "completed - promise");
-                        };
-
-                        params.error = function (m) {
-                            ERROR(m, "add error - promise", "Key", "add");
-                            defer.reject(new Error(m));
-                        };
-
-                        _pubnub.set(params);
-
-                        return defer.promise
-                    }
-                    else {
-                        params.callback = function (m) {
-                            DEBUG(2, "Key", "add", _fullPath, "completed - callback");
-                            var returnArray = [null, value, _.merge(_context, { addedKey: generatedKey })];
-                            callback.apply(this, returnArray);
-                        };
-
-                        params.error = function (m) {
-                            ERROR(m, "add error - callback", "Key", "add");
-                            var returnArray = [m, null, _context];
-                            callback.apply(this, returnArray);
-                        };
-
-                        _pubnub.set(params);
-
-                    }
-                });
-            }
-            return this;
         },
         remove: function(a,b){
 
@@ -745,7 +789,7 @@ goinstant2.BaseClasses.key = stampit().enclose(function () {
 
 
             if (!initializeComplete) {
-                LOG(_syncObject + "." + _path + " - merge() deferred");
+                LOG(_syncObject + "." + _fullPath + " - merge() deferred");
 
                 var deferredOp = {
                     action: "merge",
@@ -775,7 +819,7 @@ goinstant2.BaseClasses.key = stampit().enclose(function () {
                 if (usePromise){
                     var defer = Q.defer();
 
-                    DEBUG(2, "Key", "merge", _syncObject, "promise created", value);
+                    DEBUG(2, "Key", "merge", _fullPath, "promise created", value);
 
                     params.callback = function (m) {
                         defer.resolve({
@@ -783,7 +827,7 @@ goinstant2.BaseClasses.key = stampit().enclose(function () {
                             value: _syncData.content.data,
                             context: _context
                         });
-                        DEBUG(2, "Key", "merge", _syncObject, "promise resolved");
+                        DEBUG(2, "Key", "merge", _fullPath, "promise resolved");
                         DEBUG(2, "Key", "merge", "value", "", value);
                         DEBUG(2, "Key", "merge", "syncData", "", _syncData.get());
                     };
