@@ -3,21 +3,33 @@
 Learn more about moving from GoInstant to PubNub: 
 
 **Summary**
-(http://www.pubnub.com/goinstant/)
+
+http://www.pubnub.com/goinstant/
+
 
 **Tools**
-(http://www.pubnub.com/blog/pubnub-welcomes-goinstant-developers-migration-tools/)
+
+http://www.pubnub.com/blog/pubnub-welcomes-goinstant-developers-migration-tools/
+
 
 **Conceptual Guide**
-(http://www.pubnub.com/blog/goinstant-pubnub-conceptual-translation-guide-migrating-developers/)
 
-# Summary of Differences between PubNub-GoInstant and GoInstant libraries
+http://www.pubnub.com/blog/goinstant-pubnub-conceptual-translation-guide-migrating-developers/
+
+
+
+
+## Summary of Differences between PubNub-GoInstant and GoInstant libraries
 
 * Connection to Platform happens at the Room level, room.get() specifically
 * When Key's are created room.key(name), we initiate a retrieval of current state of that object, any operations on that (get/add/set/remove) are deferred until that operation completes
 * (more writeup coming)
 
-# TODO (by method)
+
+
+
+
+## TODO (by method)
 
 
 
