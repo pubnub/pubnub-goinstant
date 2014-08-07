@@ -40,42 +40,47 @@ Learn more about moving from GoInstant to PubNub:
 * should disconnect all rooms
 * should free up any data sync objects
 
-##### isGuest()
+###### isGuest()
 
-* (complete)
+* **todo**
+* **complete**
+    * completed
 
-##### loginUrl()
+###### loginUrl()
 
-##### logoutUrl()
+###### logoutUrl()
 
-##### on() events
+###### on() events
 
-* Since connections are made on "rooms" in PubNub, have to bubble these up
-* connect
-    * test nest
-* disconnect
-* error
+* **todo**
+    * Since connections are made on "rooms" in PubNub, have to bubble these up
+    * connect
+    * disconnect
+    * error
+    
+* **complete**        
+    * single listener
 
-##### off() 
+###### off() 
 
 * implement event deregister
 
-##### room()
+###### room()
 
-* (todo)
+* **todo**
     * remove promise style, return object
     * initiates sync
     * all connection activity happens on get()
 
-* (complete)
+* **complete**
     * creates room object
     * joins room (subscribe to channel, create Key)
 
-##### rooms()
+###### rooms()
 
 * currently returns connected rooms        
 
-##### rooms.get() (TBD)
+###### rooms.get() (TBD)
 
 * implement a Room collection 
 * implement callback & promise        
