@@ -19,44 +19,49 @@ Learn more about moving from GoInstant to PubNub:
 
 # TODO (by method)
 
-* Testing
+#### Testing
     ** Add QUnit tests for each class
 
-* connect()
+#### connect()
     ** (complete)
     
-* Connection Methods
-    ** connect()
-        *** argument object for connection (as opposed to url)
-        *** add state information for user in pubnub object
-    ** disconnect() 
-            *** implement callback & promise
-            *** should disconnect all rooms
-            *** should free up any data sync objects
-    ** isGuest()
-        ** (complete)
-    ** loginUrl()
-    ** logoutUrl()
-    ** on() events
-        *** Since connections are made on "rooms" in PubNub, have to bubble these up
-        *** connect
-        *** disconnect
-        *** error
-    ** off() 
-        *** implement event deregister
-    ** room()
-        *** (todo)
-            **** remove promise style, return object
-            **** initiates sync
-            **** all connection activity happens on get()
-        *** (complete)
-            **** creates room object
-            **** joins room (subscribe to channel, create Key)
-    ** rooms()
-        *** currently returns connected rooms        
-    ** rooms.get() (TBD)
-        *** implement a Room collection 
-        *** implement callback & promise        
+#### Connection Methods
+
+##### connect()
+
+* argument object for connection (as opposed to url)
+* add state information for user in pubnub object
+
+##### disconnect() 
+
+* implement callback & promise
+* should disconnect all rooms
+* should free up any data sync objects
+
+** isGuest()
+    ** (complete)
+** loginUrl()
+** logoutUrl()
+** on() events
+    *** Since connections are made on "rooms" in PubNub, have to bubble these up
+    *** connect
+    *** disconnect
+    *** error
+** off() 
+    *** implement event deregister
+** room()
+    *** (todo)
+        **** remove promise style, return object
+        **** initiates sync
+        **** all connection activity happens on get()
+    *** (complete)
+        **** creates room object
+        **** joins room (subscribe to channel, create Key)
+** rooms()
+    *** currently returns connected rooms        
+** rooms.get() (TBD)
+    *** implement a Room collection 
+    *** implement callback & promise        
     
 * Room
     ** channel()
