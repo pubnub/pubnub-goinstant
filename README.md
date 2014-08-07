@@ -31,37 +31,35 @@ Learn more about moving from GoInstant to PubNub:
 
 ###### connect()
 
-* argument object for connection (as opposed to url)
-* add state information for user in pubnub object
+* **[todo]** argument object for connection (as opposed to url)
+* **[todo]** add state information for user in pubnub object by uuid
 
 ###### disconnect() 
 
-* [TODO] implement callback & promise
-* should disconnect all rooms
-* should free up any data sync objects
+* **[todo]** implement callback & promise
+* **[todo]** should disconnect all rooms
+* **[todo]** should free up any data sync objects
 
 ###### isGuest()
 
-* **todo**
-* **complete**
-    * completed
+* complete
 
 ###### loginUrl()
 
+* TBD
+
 ###### logoutUrl()
+
+* TBD
 
 ###### on() events
 
-* **todo**
-    * Since connections are made on "rooms" in PubNub, have to bubble these up
-    * connect
-    * disconnect
-    * error
+* connect
+* disconnect
+* error
+* **[todo]** Since connections are made on "rooms" in PubNub, have to bubble these up
+* **[todo]** Create Listener Arrays
     
-    
-* **complete**        
-    * single listener
-
 ###### off() 
 
 * **todo**
@@ -69,23 +67,19 @@ Learn more about moving from GoInstant to PubNub:
 
 ###### room()
 
-* **todo**
-    * remove promise style, return object
-    * initiates sync
-    * all connection activity happens on get()
-
-* **complete**
-    * creates room object
-    * joins room (subscribe to channel, create Key)
+* **todo** remove promise style, return object
+* **todo** initiates sync
+* **todo** all connection activity happens on get()
 
 ###### rooms()
 
-* currently returns connected rooms        
+* currently returns connected rooms
+* **todo** passed in array should connect new rooms (Room collection object)
 
 ###### rooms.get() (TBD)
 
-* implement a Room collection 
-* implement callback & promise        
+* **todo** implement a Room collection object that  
+* **todo** implement callback & promise for whole collection 
     
 ### Room Class
 * channel()
