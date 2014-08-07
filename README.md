@@ -8,7 +8,7 @@ If your publish and subscribe functionality in Javascript was your primary use o
 
 ## Full Migration
 
-For more complex applications, we've written a full migration guide which you can find in migration.md.
+For more complex applications, we've written a full migration guide which you can find in [migration.md](https://github.com/pubnub/pubnub-goinstant/blob/master/migration-guide/migration.md).
 
 ## Widgets
 
