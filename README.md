@@ -36,7 +36,7 @@ Learn more about moving from GoInstant to PubNub:
 
 ###### disconnect() 
 
-* implement callback & promise
+* [TODO] implement callback & promise
 * should disconnect all rooms
 * should free up any data sync objects
 
