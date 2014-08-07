@@ -36,7 +36,7 @@ http://www.pubnub.com/blog/goinstant-pubnub-conceptual-translation-guide-migrati
 
 ### Testing
 
-* Add QUnit tests for each class
+* **todo** Add QUnit tests for each class
 
 
 
@@ -58,7 +58,7 @@ http://www.pubnub.com/blog/goinstant-pubnub-conceptual-translation-guide-migrati
 
 ### User
 
-* Create object factory class
+* **todo** Create object factory class
 
     
     
@@ -142,7 +142,7 @@ http://www.pubnub.com/blog/goinstant-pubnub-conceptual-translation-guide-migrati
 
 ###### channel()
 
-* add once Channel object factory is ready
+* **todo** add once Channel object factory is ready
 
 ###### connection()
 
@@ -154,7 +154,7 @@ http://www.pubnub.com/blog/goinstant-pubnub-conceptual-translation-guide-migrati
 
 ###### join()
 
-* implement callback
+* **todo** implement callback
 
 ###### joined()
 
@@ -215,32 +215,32 @@ http://www.pubnub.com/blog/goinstant-pubnub-conceptual-translation-guide-migrati
 
 ###### merge()
 
-* change to inner function (like get()/add())
+* **todo** change to inner function (like get()/add())
 
 ###### on()
 
-* add support for options { local: true }
-* add support for options { bubble: true }
+* **todo** add support for options { local: true }
+* **todo** add support for options { bubble: true }
 
 ###### off()
 
-* implement removal of listeners
+* **todo** implement removal of listeners
     
 ### Channel Class
 
-* Create object factory
+* **todo** Create object factory
 
 ###### message()
 
-* implement
+* **todo** implement
 
 ###### on()
 
-* message (message received)
+* **todo** message (message received)
 
 ###### off()
     
-* implement
+* **todo** implement
 
 
 
