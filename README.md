@@ -29,7 +29,7 @@ http://www.pubnub.com/blog/goinstant-pubnub-conceptual-translation-guide-migrati
 
 
 
-## TODO (by method)
+## TODO (by class/method)
 
 
 
@@ -41,9 +41,40 @@ http://www.pubnub.com/blog/goinstant-pubnub-conceptual-translation-guide-migrati
 
 
 
+
 ### connect()
 
 * (complete)
+
+
+
+
+### Authentication/Permissions
+
+* **TBD** how to match it up with PubNub PAM 
+
+
+
+
+### User
+
+* Create object factory class
+
+    
+    
+    
+### OT
+
+* **TBD**
+    
+
+    
+    
+    
+### Query
+
+* **TBD**
+
 
 
 
@@ -69,11 +100,11 @@ http://www.pubnub.com/blog/goinstant-pubnub-conceptual-translation-guide-migrati
 
 ###### loginUrl()
 
-* TBD
+* **TBD**
 
 ###### logoutUrl()
 
-* TBD
+* **TBD**
 
 ###### on() events
 
@@ -213,30 +244,3 @@ http://www.pubnub.com/blog/goinstant-pubnub-conceptual-translation-guide-migrati
 
 
 
-
-### Authentication/Permissions
-
-* **TBD** how to match it up with PubNub PAM 
-
-
-
-
-
-### User
-
-* Create object factory class
-
-    
-    
-    
-### OT
-
-* **TBD**
-    
-    
-    
-    
-    
-### Query
-
-* **TBD**
