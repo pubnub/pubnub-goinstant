@@ -200,18 +200,26 @@ http://www.pubnub.com/blog/goinstant-pubnub-conceptual-translation-guide-migrati
 * **todo** create object factory
 * **todo** should have methods for each context type (per class/operation)
     
+
+
+
+
+
+
+
+
 ### Key Class
 
 * **todo** Match "add" operations to received updates (via context)
 
 ###### remove()
 
-* change to inner function (like get()/add())
-* add deferred callbacks
+* **todo** change to inner function (like get()/add())
+* **todo** add deferred callbacks
 
 ###### parent()
 
-* create parent keys when needed (TBD)
+* **todo** create parent keys when needed (TBD)
 
 ###### merge()
 
