@@ -58,12 +58,14 @@ Learn more about moving from GoInstant to PubNub:
     * disconnect
     * error
     
+    
 * **complete**        
     * single listener
 
 ###### off() 
 
-* implement event deregister
+* **todo**
+** implement event deregister
 
 ###### room()
 
