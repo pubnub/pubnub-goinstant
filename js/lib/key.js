@@ -1,19 +1,21 @@
 goinstant2.BaseClasses.key = stampit().enclose(function () {
 
-    var _self, _context, _pubnub, _room, _syncObject, _path, _fullPath, _syncData;
+    var _self, _context, _pubnub, _room, _syncObject, _path, _fullPath;
 
+    // The actual Data Object kept in Sync
     var _syncData;
 
+    // Sync States
     var _syncInitiated = false;
     var _syncInitialized = false;
-
     var _syncReady = false;
+
+    // Operations that were waiting for _syncInitialized
     var _syncReadyCallbacks = [];
 
 
     var _initialOperations = [];
-    var _deferredOperations = [];
-    var _promiseChain = [];
+
 
     var _onEvents = {
         set: [],
@@ -57,103 +59,6 @@ goinstant2.BaseClasses.key = stampit().enclose(function () {
 
             callback();
 
-        });
-    }
-
-    function _deferred(callback) {
-
-        var deferredChain = _.map(_deferredOperations, function (d) {
-
-            if (d.action === "get"){
-                if (d.usePromise) {
-                    LOG("execute get() - promise", "Room", "startSync - deferredOperations");
-                    self.get(function(err, value, context){
-                        var returnObject = {
-                            err: err,
-                            value: value,
-                            context: context
-                        };
-                        console.log(returnObject);
-                        d.defer.resolve(returnObject);
-                    });
-                    return d.defer;
-                }
-                else {
-                    return self.get().then(function(result){
-                        var returnArray = [null, value, _context];
-                        d.callback.apply(this, returnArray);
-                    });
-                }
-
-            }
-            else if (d.action === "set") {
-                LOG("execute set()", "Room", "startSync - deferredOperations")
-                if (d.usePromise) {
-                    return self.set(d.value).then(function(result){
-                        d.defer.resolve(result);
-                    });
-                }
-                return self.set(d.value).then(function(result){
-                    var returnArray = [null, value, _context];
-                    d.callback.apply(this, returnArray);
-                });
-            }
-            else if (d.action === "add") {
-                LOG("execute add()", "Room", "startSync - deferredOperations")
-                if (d.usePromise) {
-                    return self.add(d.value).then(function(result){
-                        d.defer.resolve(result);
-                    });
-                }
-                return self.add(d.value).then(function(result){
-                    var returnArray = [null, value, _context];
-                    d.callback.apply(this, returnArray);
-                });
-            }
-            else if (d.action === "merge") {
-                LOG("execute merge()", "Room", "startSync - deferredOperations")
-                if (d.usePromise) {
-                    return self.merge(d.value).then(function(result){
-                        d.defer.resolve(result);
-                    });
-                }
-                return self.merge(d.value).then(function(result){
-                    var returnArray = [null, value, _context];
-                    d.callback.apply(this, returnArray);
-                });
-            }
-            else if (d.action === "remove") {
-                LOG("execute remove()", "Room", "startSync - deferredOperations")
-                if (d.usePromise) {
-                    return self.remove().then(function(result){
-                        d.defer.resolve(result);
-                    });
-                }
-                return self.remove().then(function(result){
-                    var returnArray = [null, value, _context];
-                    d.callback.apply(this, returnArray);
-                });
-            }
-        });
-
-        // Now we are ready to go
-        Q.allSettled(deferredChain).then(function(){
-
-            DEBUG(2, "Key", "_deferred", _fullPath, "deferred complete");
-
-            _deferredOperations = [];
-            _syncReady = true;
-
-//            LOG_GROUP("Key: " + _syncObject + " - startSync() promise resolved");
-//            LOG(_syncObject, "Key", "key.object_id");
-//            LOG(_path, "Key", "key.path");
-//            LOG(_syncData.content.data, "Key", "key.get");
-//            LOG_GROUP_END();
-
-            callback();
-
-        }).catch(function(e){
-            ERROR("KEY", "_initializeData", e);
         });
     }
 
@@ -224,32 +129,41 @@ goinstant2.BaseClasses.key = stampit().enclose(function () {
                     return this;
                 }
             }
+            else {
+                throw new Error("InitializeData should be done before calling sync()");
+            }
+
             return _initialOperations;
         },
         sync: function(callback) {
+
             DEBUG(2, "Key", "sync", _fullPath, "sync initiate");
 
+            // Initiate download of current state of object
             _syncData = _pubnub.sync(_fullPath);
 
+            // When the sync object has been downloaded
             _syncData.on.ready(function(){
-                var val = _syncData.get();
+
                 DEBUG(2, "Key", "sync", _fullPath, "sync ready");
-                //DEBUG(2, "Key", "sync", _fullPath, "value", val);
                 DEBUG(2, "Key", "sync", _fullPath, "initializeData start");
+
+                // If specified, initialize the object with data
                 _initialize(function(){
                     DEBUG(2, "Key", "sync", _fullPath, "initializeData complete");
-                    _syncReady = true;
-                    _deferred(function(){
-                        DEBUG(2, "Key", "sync", _fullPath, "deferred complete");
+                    DEBUG(2, "Key", "sync", _fullPath, "execute callbacks", _syncReadyCallbacks);
 
-                        DEBUG(2, "Key", "sync", _fullPath, "execute callbacks", _syncReadyCallbacks);
-                        _.forEach(_syncReadyCallbacks, function(c){
-                            DEBUG(2, "Key", "sync", _fullPath, "execute callbacks", { type: c.operation + "()" });
-                            c.callback.apply(this, c.params);
-                        });
-
-                        callback();
+                    // Call each of the deferred operations that were waiting for sync to
+                    // download the current state and initialize the data object
+                    _.forEach(_syncReadyCallbacks, function(c){
+                        DEBUG(2, "Key", "sync", _fullPath, "execute callbacks", { type: c.operation + "()" });
+                        c.callback.apply(this, c.params);
                     });
+
+                    _syncReady = true;
+
+                    callback();
+
                 });
             });
 

@@ -1,5 +1,7 @@
 goinstant2.Connection = function(url) {
-    return new goinstant2.BaseClasses.connection().url(url);
+    if (typeof url === 'string') {
+        return new goinstant2.BaseClasses.connection().url(url);
+    }
 };
 
 goinstant2.connect = function(url, a, b){
